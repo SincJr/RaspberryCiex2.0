@@ -6,10 +6,23 @@ import xml.etree.ElementTree as ET
 from threading import Thread
 import time
 from datetime import datetime, timedelta
+import serial
+import struct
 
 DEBUG_XML = False
 DEBUG_REDE = True
 DEBUG_TIME = True
+
+ser = serial.Serial(
+    port='/dev/ttyS0',
+    baudrate =9600,           
+    parity=serial.PARITY_NONE,
+    stopbits=serial.STOPBITS_ONE,
+    bytesize=serial.EIGHTBITS,
+    timeout=1)
+
+
+ff = struct.pack('B', 0xff)
 
 file_config = 'ConfigM.xml'
 
@@ -94,9 +107,24 @@ if DEBUG_TIME:
         def run(self):
             while True:
                 startTempo = datetime.now()
-                while datetime.now() - startTempo < timedelta(seconds=.80):
+                while datetime.now() - startTempo < timedelta(seconds=.1):
                     pass
-                print(datetime.now())
+                
+                now = datetime.now()
+                second = '{:02d}'.format(now.second)
+                second = str(second)
+                minute = '{:02d}'.format(now.minute)
+                minute = str(minute)
+                hour = '{:02d}'.format(now.hour)
+                hour = str(hour)
+                
+                tempo = hour + ':' + minute + ':' + second
+                tempo = bytes('"'+str(tempo)+'"', encoding='iso-8859-1')
+                
+                ser.write(b't2.txt=')
+                ser.write(tempo)
+                ser.write(ff+ff+ff)
+                
 
 
 if DEBUG_TIME:
