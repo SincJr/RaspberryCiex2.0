@@ -121,10 +121,21 @@ if DEBUG_TIME:
                 tempo = hour + ':' + minute + ':' + second
                 tempo = bytes('"'+str(tempo)+'"', encoding='iso-8859-1')
                 
-                ser.write(b't2.txt=')
+                ser.write(b't1.txt=')
                 ser.write(tempo)
                 ser.write(ff+ff+ff)
                 
+                x = ser.readlines()
+                print(x)
+                if x:
+                    print('A')
+                    for y in x:
+                        _, sinal, _ = str(y).split("'")
+                        print(sinal)
+                        sinal = sinal.replace('\\xff\\xff\\xff', '')
+                        print(sinal)
+                        e, info1, info2, info3 = sinal.split('\\x')
+                        print(info2)
 
 
 if DEBUG_TIME:
