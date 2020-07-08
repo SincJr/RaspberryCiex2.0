@@ -29,6 +29,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="data\ConfigM.xml" />
+    <Content Include="data\paradas.xml" />
+    <Content Include="data\producao.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
