@@ -15,6 +15,7 @@ from gpiozero import Button
 #
 NEXTION_TELA = 1
 
+INTERRUPT_PIN = 17
 
 PORTA_BASE_PADRAO = 32000
 MAQUINA = 3
@@ -25,8 +26,7 @@ SEM_TIPO_PARADA = 'Não informada'
 DESLIGAR = 1 #Colocar aqui ID do botão "Sim" na tela de desligar
 
 ID_PAG = 0
-ID_OK = 4 #definir ID do botao do OK do Nextion
-
+ID_OK =  4#definir ID do botao do OK do Nextion
 
 QUERO_TELA = 1
 QUERO_TUDO = 2
@@ -39,12 +39,12 @@ T_LOTE = 4
 T_METsemAD = 5
 T_METcomAD = 6
 T_OPERADOR = 7
-T_ROLO = 8
+T_ROLO =8
 T_META = 9
 T_PRODUZINDO = 10
 T_PARADAS = 11
 T_VOLTAR = 12
-T_NOVAPROD
+T_NOVAPROD = 13
 T_DESLIGAR = 14
 
 
@@ -84,7 +84,12 @@ arq_prod = os.path.abspath(os.path.join('data', file_prod))
 producao = 0
 dictOperadores = {}
 dictParadas = {}
-dia, mes, ano, hora, minuto = 0
+dia = 0
+mes = 0
+ano = 0
+hora = 0
+minuto = 0
+segundo = 0
 op = ''
 lote = ''
 operador = ''
@@ -97,6 +102,9 @@ timerAFK = False
 
 idProd = ''
 idParada = ''
+
+produzindo = False
+parada = False
 
 flagParada = False
 flagProd = False
@@ -167,15 +175,15 @@ class Clock(Thread):
                 
 
         
-    def pegarHoraRTC(self):
+    def pegarHoraRTC(self, emInt = False):
         now = datetime.now()
-        second = '{:02d}'.format(now.second)
-        second = str(second)
-        minute = '{:02d}'.format(now.minute)
-        minute = str(minute)
         hour = '{:02d}'.format(now.hour)
         hour = str(hour)
-
+        minute = '{:02d}'.format(now.minute)
+        minute = str(minute)
+        second = '{:02d}'.format(now.second)
+        second = str(second)
+        
         return hour, minute, second
 
     def pegarDataRTC(self):
@@ -184,7 +192,7 @@ class Clock(Thread):
         day = str(day)
         month = '{:02d}'.format(now.month)
         month = str(month)
-        year = '{:02d}'.format(now.year)
+        year = '{:04d}'.format(now.year)
         year = str(year)
          
         return day, month, year
@@ -192,7 +200,7 @@ class Clock(Thread):
 
 class DetectaAFK(Thread):
     def __init__(self):
-        self.__init__(Thread)
+        Thread.__init__(self)
         self.daemon = True
         self.start()
 
@@ -235,26 +243,35 @@ def enviar(varNextion, msgEnviar, texto = True):
     ser.write(varNextion)
 
     if msgEnviar:
-        msgEnviar = bytes('"'+str(msgEnviar)+'"', encoding='iso-8859-1')
+        if texto:
+            msgEnviar = bytes('.txt="'+str(msgEnviar)+'"', encoding='iso-8859-1')
+
+        else:
+            msgEnviar = bytes('="'+str(msgEnviar)+'"', encoding='iso-8859-1')
         ser.write(msgEnviar)
     
     ser.write(ff+ff+ff)
-
+    print('C')
 
 def receberInfo(tipo):
+    hexDesejado = [20,20,20]
     while True:
         msgSerial = ser.readlines()
+        print(msgSerial)
         if msgSerial:
-            for linha in msgRecebida:
+            for index, linha in enumerate(msgSerial):
                 _, hexRecebido, _ = str(linha).split("'")
                 hexRecebido = hexRecebido.replace('\\xff\\xff\\xff', '')
                 hexDesejado = hexRecebido.split('\\x')
                 
-                break
-        break
+                if index is 0 and tipo is QUERO_TELA:
+                    break
+                else:
+                    pass
+            break
    
     if tipo is QUERO_TELA:
-        return hexDesejado[1], hexDesejado[2]
+        return hexDesejado[2], hexDesejado[3]
     if tipo is QUERO_TUDO:
         return hexDesejado
 
@@ -296,8 +313,8 @@ def atualizarNextion(soHora = False, barra=False):
     if barra:
         enviar("tProgresso", str(progressoMeta()))
 
-    enviar("tData", '/'.join(Clock.pegarDiaRTC))
-    enviar("tHora", ':'.join(Clock.pegarHoraRTC()))
+    enviar("tHora", ':'.join(rtc.pegarHoraRTC()))
+    enviar("tData", '/'.join(rtc.pegarDataRTC()))
     
 def atualizarXml(atualizarProd, atualizarParada):
     if atualiizarProd:
@@ -385,7 +402,7 @@ def progressoMeta():
 
 
 Server()
-Clock()
+rtc = Clock()
 DetectaAFK()
 
 fimDeCurso.when_pressed = FuncInterrupt
@@ -393,15 +410,21 @@ fimDeCurso.when_pressed = FuncInterrupt
 while True:
 
     sinalTela, botaoApertado = receberInfo(QUERO_TELA)
-
+    sinalTela = int(sinalTela)
+    botaoApertado = int(botaoApertado)
+    print(sinalTela)
+    
     if sinalTela is T_INICIAL:
         primeiro = True
         produzindo = False
         parada = False
         producao = 0
 
-    elif sinalTela is T_DATAHORA or T_AJUSTAR:
+    if sinalTela is T_DATAHORA or sinalTela is T_AJUSTAR:
+        print('B')
+        print(botaoApertado)
         if botaoApertado is ID_PAG:
+            print('A')
             atualizarNextion(True)
         elif sinalTela is T_AJUSTAR and botaoApertado is ID_OK:
             _, hora, _, minuto, _, segundo = receberInfo(QUERO_TUDO)
