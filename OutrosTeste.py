@@ -71,7 +71,7 @@ class Clock(Thread):
                 while datetime.now() - startTempo < timedelta(seconds=.1):
                     pass
                 if self.telaAtual is T_DATAHORA:
-                    print(self.telaAtual)
+                    #print(self.telaAtual)
                     atualizarNextion(True, False)
                 #if produzindo:
                     #atualizarNextion(True, True)
@@ -150,11 +150,11 @@ class LeitorNextion(Thread):
             botaoApertado = False
             botaoAlternativas = False
             sinalTela = -1
-            print('Oi')
+            
             msg = ser.read()
+            print('por quê?')
             while msg:
                 msg = msg.decode('iso-8859-1')
-                
                 
                 if msg == 'e':          #BOTAO OK
                     sair = False
@@ -192,12 +192,12 @@ class LeitorNextion(Thread):
                             
                             
                 elif msg == bytes.fromhex('aa').decode('iso-8859-1'): #NOVA TELA
-                    msg = ser.read()
                     sair = False
                     while not sair:
-                        if msg == b'\xff':
-                            msg = ser.read()
-                            msg = ser.read()
+                        msg = ser.read()
+                        if msg == b'\x00':
+                            #msg = ser.read()
+                            #msg = ser.read()
                             sair = True
                         else:            
                             msg = str(msg)
@@ -206,7 +206,8 @@ class LeitorNextion(Thread):
                             msg = msg.replace('\\x', '')
                             msg = int(msg, 16)
                             sinalTela = msg
-                            break
+                            print('CCC' + str(sinalTela))
+                            
                     
                     
                 elif msg == 'b':        #INFO BOTAO ALTERNATIVAS
@@ -225,23 +226,25 @@ class LeitorNextion(Thread):
                             msg = msg.replace('\\x', '')
                             msg = int(msg, 16)
                             sinais.append(msg)
+                        msg = ser.read()
                         sair = True #
                     botaoTela = sinais[0]
                     qualOpcao = sinais[1]
                     logicaPrincipal(botaoTela, False, qualBotao)
                     
                 msg = ser.read()
-                print(msg)
                 
             if sinalTela is not -1:
-                print(sinalTela)
+                print('DDDD')
                 logicaPrincipal(sinalTela, True, False)
                 
 
 def logicaPrincipal(tela, entrando, mensagem):  
              #aqui se poe os comandos que vao rodar quando ENTRAR na pagina
-    print('AA ' + str(tela))
-    rtc.telaAtual = tela
+    if entrando:
+        Clock.telaAtual = tela
+    else:
+        Clock.telaAtual = 0
     
     if tela is T_INICIAL:
         pass
