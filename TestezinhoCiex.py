@@ -254,27 +254,62 @@ def enviar(varNextion, msgEnviar, texto = True):
     print('C')
 
 def receberInfo(tipo):
-    hexDesejado = [20,20,20]
-    while True:
-        msgSerial = ser.readlines()
-        print(msgSerial)
-        if msgSerial:
-            for index, linha in enumerate(msgSerial):
-                _, hexRecebido, _ = str(linha).split("'")
-                hexRecebido = hexRecebido.replace('\\xff\\xff\\xff', '')
-                hexDesejado = hexRecebido.split('\\x')
-                
-                if index is 0 and tipo is QUERO_TELA:
-                    break
-                else:
-                    pass
-            break
-   
-    if tipo is QUERO_TELA:
-        return hexDesejado[2], hexDesejado[3]
-    if tipo is QUERO_TUDO:
-        return hexDesejado
+    sair = False
 
+    while True:
+        msg = ser.read()
+        msg = msg.decode('iso-8859-1')
+        if msg is 'e':     #pagina
+            sair = False
+            sinais = []
+            while not sair:
+                msg = ser.read()
+                if msg == b'\xff':
+                    msg = ser.read()
+                    msg = ser.read()
+                    sair = True
+                else:            
+                    msg = str(msg)
+                    msg = msg.replace('b', '', 1)
+                    msg = msg.replace("'", '')
+                    msg = msg.replace('\\x', '')
+                    msg = int(msg, 16)
+                    sinais.append(msg)
+                    print(msg)
+            print(sinais)
+            pgBotao = sinais[0]
+        elif msg is 'p':
+            sair = False
+            txtRecebido = ''
+            while not sair:
+                msg = ser.read()
+                if msg == b'\xff':
+                    msg = ser.read()
+                    msg = ser.read()
+                    sair = True
+                else:            
+                    msg = msg.decode('iso-8859-1')
+                    txtRecebido += msg
+            print(txtRecebido)
+                    
+        elif msg == bytes.fromhex('aa').decode('iso-8859-1'):
+            msg = ser.read()
+            sair = False
+            while not sair:
+                if msg == b'\xff':
+                    msg = ser.read()
+                    msg = ser.read()
+                    sair = True
+                else:            
+                    msg = str(msg)
+                    msg = msg.replace('b', '', 1)
+                    msg = msg.replace("'", '')
+                    msg = msg.replace('\\x', '')
+                    msg = int(msg, 16)
+                    sinalTela = msg
+                    break
+                
+        
 
 def pegarOperadores():
     xmlConfig = minidom.parse(arq_config)
@@ -508,7 +543,6 @@ while True:
         else:
             tipoParada = dictParadas[botaoApertado]
             dictXmlParada['tipo'] = tipoParada
-            dictXmlParada['duracao'] = (datetime.isoformat(datetime.now().replace(microsecond=0)) - dictXmlParada['data']).total_seconds
 
     elif sinalTela is T_NOVAPROD:
         if botaoApertado is ID_PAG:
