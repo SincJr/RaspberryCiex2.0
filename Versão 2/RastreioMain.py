@@ -93,7 +93,7 @@ arq_parada = os.path.abspath(os.path.join('data', file_paradas))
 arq_prod = os.path.abspath(os.path.join('data', file_prod))
 
 
-class Server(Thread):
+class Server(Thread): #
     def __init__(self):
         Thread.__init__(self)
         self.daemon = True
@@ -131,7 +131,7 @@ class Server(Thread):
                         print('Erro!')
 
 
-class Clock(Thread):
+class Clock(Thread): #
     
     telaAtual = 0
     
@@ -202,7 +202,7 @@ def FuncInterrupt():
         dictXmlParada['duracao'] = (datetime.isoformat(datetime.now().replace(microsecond=0)) - dictXmlParada['data']).total_seconds
 
 
-def atualizarNextion(menosInfo, progresso):
+def atualizarNextion(menosInfo, progresso): #
     if not menosInfo:
         global rolo
         enviar('tOP', dictXmlProd['op'])
@@ -220,7 +220,7 @@ def atualizarNextion(menosInfo, progresso):
     enviar("tData", '/'.join(rtc.pegarDataRTC()))
 
 
-def atualizarXml(atualizarProd, atualizarParada):
+def atualizarXml(atualizarProd, atualizarParada): 
     global idProd
     global idParada
     global MAQUINA
@@ -251,7 +251,7 @@ def progressoMeta():
     return int((producao * 100)/dictXmlProd['meta'])
 
 
-def enviar(varNextion, msgEnviar, texto = True):
+def enviar(varNextion, msgEnviar, texto = True): #
     
     varNextion = bytes(varNextion, encoding='iso-8859-1')
     ser.write(varNextion)
@@ -267,7 +267,7 @@ def enviar(varNextion, msgEnviar, texto = True):
     ser.write(ff+ff+ff)
 
 
-def pegarOperadores():
+def pegarOperadores(): #
     global arq_config
     xmlConfig = minidom.parse(arq_config)
 
@@ -276,7 +276,7 @@ def pegarOperadores():
     listaOperadores = {}
 
     for index, nomeOperador  in enumerate(listaOperadoresXml):
-        listaOperadores[index] = nomeOperador    
+        listaOperadores[index] = nomeOperador.firstChild.nodeValue    
 
     return listaOperadores, len(listaOperadores)
 
@@ -350,7 +350,7 @@ def calculaMeta():
     return calculada
  
     
-class LeitorNextion(Thread):
+class LeitorNextion(Thread): #
     def __init__(self):
         Thread.__init__(self)
         self.daemon = True
@@ -437,7 +437,7 @@ class LeitorNextion(Thread):
                             sinais.append(msg)
                     botaoTela = sinais[0]
                     qualOpcao = sinais[1]
-                    logicaPrincipal(botaoTela, False, qualBotao)
+                    logicaPrincipal(botaoTela, False, qualOpcao)
                     
                 elif msg  == 'k':
                     sair = False
@@ -453,7 +453,7 @@ class LeitorNextion(Thread):
                             msg = msg.replace('\\x', '')
                             sinais.append(msg)
                     scrollTela = int(sinais[0], 16)
-                    direcao = bytes.fromhex(sinais[1]).decode('iso-8859-1')
+                    direcao = sinais[1]
                     logicaPrincipal(scrollTela, False, direcao)
 
                 msg = ser.read()
@@ -463,7 +463,7 @@ class LeitorNextion(Thread):
                 logicaPrincipal(sinalTela, True, False)
 
 
-def logicaPrincipal(tela, entrando, mensagem):  
+def logicaPrincipal(tela, entrando, mensagem):   #
              #aqui se poe os comandos que vao rodar quando ENTRAR na pagina
     if entrando:  
         Clock.telaAtual = tela
@@ -512,7 +512,7 @@ def logicaPrincipal(tela, entrando, mensagem):
         if entrando:
             ano = datetime.today()
             ano = ano.strftime('%y')
-            enviar('tAno', ano)
+            enviar('tAno', ('/'+ano))
         else:
             dictXmlProd['lote'] = mensagem
             dictXmlParada['lote'] = mensagem
@@ -534,10 +534,12 @@ def logicaPrincipal(tela, entrando, mensagem):
     if tela is T_OPERADOR:
         global conjuntoOperadores
         global colunaAtual
+        global colunas
+        global dictOperadores
+        linhas = 3 #operadores na tela
         if entrando:            #nesse caso não é só entrando, é trocando de tela tambem
-            listaOperadores, qtdOperadores = pegarOperadores()
-
-            linhas = 3 #operadores na tela
+            dictOperadores, qtdOperadores = pegarOperadores()
+            print(dictOperadores)
             colunas = ceil(qtdOperadores/linhas)
 
             conjuntoOperadores = [[0 for x in range(linhas)] for y in range(colunas)]
@@ -546,17 +548,20 @@ def logicaPrincipal(tela, entrando, mensagem):
             for col in range(colunas):
                 for lin in range(linhas):
                     if qtdOperadores is not index:
-                        conjuntoOperadores[col][lin] = listaOperadores[index]
+                        conjuntoOperadores[col][lin] = dictOperadores[index]
                         index +=1
                     else:
-                        conjuntoOperadores[col][lin] = ''
+                        conjuntoOperadores[col][lin] = ' '
 
             for lin in range(linhas):
                 enviar("tO"+str(lin), conjuntoOperadores[colunaAtual][lin])
                   
+            if colunas > 1:
+                enviar("vis bR,1", False, False)
 
         else:
             if mensagem == '>':
+                print('AA')
                 colunaAtual += 1
                 for lin in range(linhas):
                     enviar("tO"+str(lin), conjuntoOperadores[colunaAtual][lin])
@@ -564,8 +569,13 @@ def logicaPrincipal(tela, entrando, mensagem):
                     enviar("vis bR,1",False,False)
                 else:
                     enviar("vis bR,0",False,False)
-                    #desativado o >
+                if colunaAtual > 0:
+                    enviar("vis bL,1",False,False)
+                else:
+                    enviar("vis bL,0",False,False)
+                    
             elif mensagem == '<':
+                print('BB')
                 colunaAtual -= 1
                 for lin in range(linhas):
                     enviar("tO"+str(lin), conjuntoOperadores[colunaAtual][lin])
@@ -573,12 +583,15 @@ def logicaPrincipal(tela, entrando, mensagem):
                     enviar("vis bL,1",False,False)
                 else:
                     enviar("vis bL,0",False,False)
-                    #desativado o <
-
-            operador = dictOperadores[mensagem]
-            dictXmlProd['operador'] = operador
-            dictXmlParada['operador'] = operador
-           
+                if colunas > colunaAtual:
+                    enviar("vis bR,1",False,False)
+                else:
+                    enviar("vis bR,0",False,False)
+                    
+            else:
+                operador = dictOperadores[mensagem]
+                dictXmlProd['operador'] = operador
+                dictXmlParada['operador'] = operador
             
     if tela is T_ROLO:
         if entrando:
