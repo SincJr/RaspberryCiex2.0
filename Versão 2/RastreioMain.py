@@ -46,7 +46,7 @@ SIM = 69
 #
 ser = serial.Serial(
     port='/dev/ttyS0',
-    baudrate =9600,           
+    baudrate =19200,           
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
