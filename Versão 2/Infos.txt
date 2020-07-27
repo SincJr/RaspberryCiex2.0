@@ -1,0 +1,29 @@
+Mini txt que visa ajudar na organização do projeto
+
+	--> Funções que faltam transferir da V1:
+		
+		- Detecta AFK
+
+	--> Verificar
+	
+		-FuncInterrupt
+
+	
+	--> Funções praticamente garantidas de estarem funcionando
+		
+		- Server
+		- Clock 
+		- LeituraNextion
+		- Enviar
+		- Atualizar Nextion
+		*- gerarXmlProd
+		*- gerarXmlParada
+		*- calcularMeta
+		*- progressoMeta
+		*- PegarOperadores
+		*- PegarRolos
+
+	--> Coisas a atentar
+		
+		- Numero max de paradas e operadores
+		- Numero das telas

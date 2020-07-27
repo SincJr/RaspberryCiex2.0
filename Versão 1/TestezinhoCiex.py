@@ -253,6 +253,7 @@ def enviar(varNextion, msgEnviar, texto = True):
     ser.write(ff+ff+ff)
     print('C')
 
+
 def receberInfo(tipo):
     sair = False
 
@@ -309,7 +310,6 @@ def receberInfo(tipo):
                     sinalTela = msg
                     break
                 
-        
 
 def pegarOperadores():
     xmlConfig = minidom.parse(arq_config)
@@ -350,6 +350,7 @@ def atualizarNextion(soHora = False, barra=False):
 
     enviar("tHora", ':'.join(rtc.pegarHoraRTC()))
     enviar("tData", '/'.join(rtc.pegarDataRTC()))
+   
     
 def atualizarXml(atualizarProd, atualizarParada):
     if atualiizarProd:

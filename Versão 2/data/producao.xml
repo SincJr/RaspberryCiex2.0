@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<producoes>
+<producoesM1>
+<producao id="1">
+    <lote>NP234</lote>
+    <op>123</op>
+    <inicio>2018-10-28T07:31:00Z</inicio>
+    <fim>2018-10-28T11:57:00Z</fim>
+    <maquina>1</maquina>
+    <operador>Operador Claudio</operador>
+    <eixo>Eixo 3</eixo>
+    <meta>15000</meta>
+    <qtd>1237</qtd>
+    <rolosad>500</rolosad>
+    <rolocad>495</rolocad>
+</producao>
+</producoesM1>
+<producoesM2>
+</producoesM2>
+<producoesM3>
+<producao id="2">
+    <lote>NP235</lote>
+    <op>123</op>
+    <inicio>2018-10-28T07:31:00Z</inicio>
+    <fim>2018-10-28T11:57:00Z</fim>
+    <maquina>1</maquina>
+    <operador>Operador Claudio</operador>
+    <eixo>Eixo 3</eixo>
+    <meta>8000</meta>
+    <qtd>8001</qtd>
+    <rolosad>500</rolosad>
+    <rolocad>495</rolocad>
+</producao>
+<producao id="3">
+    <lote>NP235</lote>
+    <op>124</op>
+    <inicio>2018-10-28T07:31:00Z</inicio>
+    <fim>2018-10-28T11:57:00Z</fim>
+    <maquina>1</maquina>
+    <operador>Operador Claudio</operador>
+    <eixo>Eixo 3</eixo>
+    <meta>8000</meta>
+    <qtd>7999</qtd>
+    <rolosad>500</rolosad>
+    <rolocad>495</rolocad>
+</producao>
+</producoesM3>
+</producoes>
