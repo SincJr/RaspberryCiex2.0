@@ -52,7 +52,7 @@ ser = serial.Serial(
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
-    timeout=1   #mudar pra 0 que fica bem mais rapido, 1 é melhor pra debug
+    timeout=0.5   #mudar pra 0 que fica bem mais rapido, 1 é melhor pra debug
     )
     
 ff = struct.pack('B', 0xff)
@@ -76,7 +76,7 @@ lote = ''
 operador = ''
 meta = ''
 rolo = ''
-rolos = {0:'25x10', 1:'25:09', 2:'25x45'} 
+rolos = {0:'25x10', 1:'25x09', 2:'25x45'} 
 dictXmlProd = {'lote':'', 'op':'', 'inicio':'', 'fim':'', 'maquina':str(MAQUINA), 'operador':'', 'eixo':'', 'meta':'', 'qtd':'', 'rolosad':'', 'rolocad':''}
 dictXmlParada = {'data':'', 'lote':'', 'op':'', 'tipo':'', 'maquina':str(MAQUINA), 'operador':'', 'duracao':''}
 
@@ -228,7 +228,6 @@ class BateuMeta(Thread):
 
     def run(self):
         global producao
-        global 
         if dictXmlProd['meta'] >= producao and self.flag and self.telaAtual is T_PRODUZINDO:
             self.bateu = True
             nextion.Enviar("page pNovaProd", False, False)
@@ -391,6 +390,7 @@ class Nextion(Thread): #
             print('por quê?')
             while msg:
                 msg = msg.decode('iso-8859-1')
+                print(msg)
                 
                 if msg == 'e':          #BOTAO OK
                     sair = False
@@ -429,8 +429,11 @@ class Nextion(Thread): #
                     sair = False
                     while not sair:
                         msg = ser.read()
+                        print(msg)
                         if msg == b'\xff':
                             sair = True
+                        elif msg == b'\t':
+                            pass
                         else:            
                             msg = str(msg)
                             msg = msg.replace('b', '', 1)
@@ -601,7 +604,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         global colunas
         global dictOperadores
         global visivel
-        linhas = 3 #operadores na tela
+        linhas = 4 #operadores na tela
         if entrando:            #nesse caso não é só entrando, é trocando de tela tambem
             visivel = [1 for x in range(linhas)]
             dictOperadores, qtdOperadores = xml.PegarOpcoes('operador')
@@ -665,6 +668,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         else:
             global rolo
             rolo = rolos[mensagem]
+            print(rolo)
             
     if tela is T_META:
         configurando = True
@@ -675,7 +679,6 @@ def logicaPrincipal(tela, entrando, mensagem):   #
 
     if tela is T_PRODUZINDO:
         configurando = False
-        global inicioProd
         global produzindo
         global parada
         if entrando:
@@ -698,14 +701,9 @@ def logicaPrincipal(tela, entrando, mensagem):   #
     if tela is T_PARADAS:
         configurando = False
         global inicioParada
-        global produzindo
-        global parada
         global conjuntoParadas
-        global colunaAtual
-        global colunas
         global dictParadas
-        global visivel
-        linhas = 3
+        linhas = 4
         if entrando:
             xml.GerarNovaParada()
             dictXmlParada['data'] = datetime.now().replace(microsecond=0).isoformat()
