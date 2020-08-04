@@ -15,7 +15,7 @@
 </producao>
 </producoesM1>
 <producoesM2>
-<producao id="1"><lote>FP99/20</lote><op>45</op><inicio>2020-08-04T00:39:38</inicio><fim>2020-08-04T00:40:01</fim><maquina>2</maquina><operador>Rui</operador><eixo>Erro</eixo><meta>6</meta><qtd>6</qtd><rolosad>49</rolosad><rolocad>45</rolocad></producao></producoesM2>
+</producoesM2>
 <producoesM3>
 <producao id="2">
     <lote>NP235</lote>
@@ -42,6 +42,5 @@
     <qtd>7999</qtd>
     <rolosad>500</rolosad>
     <rolocad>495</rolocad>
-</producao>
-</producoesM3>
+</producao><producao id="4"><lote /><op /><inicio /><fim /><maquina /><operador /><eixo /><meta /><qtd /><rolosad /><rolocad /></producao><producao id="5"><lote /><op /><inicio /><fim /><maquina /><operador /><eixo /><meta /><qtd /><rolosad /><rolocad /></producao></producoesM3>
 </producoes>
