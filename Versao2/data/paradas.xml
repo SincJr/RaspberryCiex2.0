@@ -40,5 +40,5 @@
     <operador>Joao</operador>
     <duracao>137</duracao>
 </parada>
-</paradasM3>
+<parada id="2"><data>2020-08-09T15:24:53</data><lote>FP55/20</lote><op>44</op><tipo>Churras</tipo><maquina>3</maquina><operador>Jonathan</operador><duracao>11</duracao></parada></paradasM3>
 </paradas>

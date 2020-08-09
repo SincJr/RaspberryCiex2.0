@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import struct
 from math import ceil
 import subprocess
+import netifaces
 import RPi.GPIO as GPIO
 
 #
@@ -37,7 +38,7 @@ T_DESLIGAR = 14
 INTERRUPT_PIN = 27
 
 PORTA_BASE_PADRAO = 32000
-MAQUINA = 1
+MAQUINA = 3
 PORT = PORTA_BASE_PADRAO + MAQUINA
 
 SIM = 69
@@ -123,33 +124,36 @@ class Server(Thread): #
         while True:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR, 1 )
-                HOST = socket.gethostname()
-                sock.bind((HOST, PORT))
-                sock.listen()
+                try:
+                    HOST = netifaces.ifaddresses('eth0')[2][0]['addr']
+                    sock.bind((HOST, PORT))
+                    sock.listen()
+                    print('ouve')
+                    client, addr = sock.accept()
+                    print('oi')
+                    with client:
+                        print('Connectado a', addr)
+                        btipo = client.recv(1)
+                        tipo = btipo.decode("utf-8")
+                        if btipo is 'c' or 'p':  # c = config (ou seja, receber info de maquina), p = prod/paradas (ou seja, enviar xmls)
+                            client.send(btipo)     # echo
+                            if tipo is 'c':
+                                stream = client.recv(1024000)
+                                root = ET.fromstring(stream)
+                                with open(arq_config,'w') as arq:
+                                    arq.write(ET.tostring(root).decode())
+                            else:
+                                xmlStream = ET.parse(arq_parada)
+                                xmlstr = ET.tostring(xmlStream.getroot()).decode()
+                                client.send(bytes(xmlstr, "utf-8"))
 
-                client, addr = sock.accept()
-
-                with client:
-                    print('Connectado a', addr)
-                    btipo = client.recv(1)
-                    tipo = btipo.decode("utf-8")
-                    if btipo is 'c' or 'p':  # c = config (ou seja, receber info de maquina), p = prod/paradas (ou seja, enviar xmls)
-                        client.send(btipo)     # echo
-                        if tipo is 'c':
-                            stream = client.recv(1024000)
-                            root = ET.fromstring(stream)
-                            with open(arq_config,'w') as arq:
-                                arq.write(ET.tostring(root).decode())
+                                xmlStream = ET.parse(arq_prod)
+                                xmlstr = ET.tostring(xmlStream.getroot()).decode()
+                                client.send(bytes(xmlstr, "utf-8"))
                         else:
-                            xmlStream = ET.parse(arq_parada)
-                            xmlstr = ET.tostring(xmlStream.getroot()).decode()
-                            client.send(bytes(xmlstr, "utf-8"))
-
-                            xmlStream = ET.parse(arq_prod)
-                            xmlstr = ET.tostring(xmlStream.getroot()).decode()
-                            client.send(bytes(xmlstr, "utf-8"))
-                    else:
-                        print('Erro!')
+                            print('Erro!')
+                except:
+                    pass
 
 
 class Clock(Thread): #
@@ -171,7 +175,7 @@ class Clock(Thread): #
                 while datetime.now() - startTempo5s < timedelta(seconds=5):
                     
                     startTempo = datetime.now()
-                    while datetime.now() - startTempo < timedelta(seconds=.05):
+                    while datetime.now() - startTempo < timedelta(seconds=.1):
                         pass
 
                     if self.telaAtual is T_DATAHORA and not nextion.atualizando:
@@ -645,9 +649,26 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         global primeiro 
         global inicioProd
         
-        nextion.Enviar("tIP", socket.gethostname())
-
+        startConectando = datetime.now()
+        
         nextion.Enviar("dim=100", False, False)
+        
+        sucessoRede = False
+        
+        while datetime.now() - startConectando < timedelta(minutes=0.5):
+            try:
+                ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+                nextion.Enviar("tIP", ip)
+                sucessoRede = True
+                break
+            except:
+                nextion.Enviar("tIP", "Aguarde, conectando")
+            
+            
+        if not sucessoRede:
+            nextion.Enviar("tIP", "Falha ao conectar")
+                
+        
         nextion.Enviar("tsw 255,1", False, False)
 
         primeiro = False
@@ -927,9 +948,11 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         else:
             if mensagem is SIM:
                 print("AAA")
-                dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat()
-                xml.SalvarAlteracoes(True, False)
+                if not inicioProd:
+                    dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat()
+                    xml.SalvarAlteracoes(True, False)
                 nextion.Enviar("rest", False, False)
+                ser.close()
                 GPIO.cleanup()
                 subprocess.Popen(['sudo','shutdown','-h','now'])
             pass

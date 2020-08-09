@@ -43,5 +43,5 @@
     <rolosad>500</rolosad>
     <rolocad>495</rolocad>
 </producao>
-</producoesM3>
+<producao id="4"><lote>FP55/20</lote><op>44</op><inicio>2020-08-09T15:24:49</inicio><fim>2020-08-09T15:25:08</fim><maquina>3</maquina><operador>Jonathan</operador><eixo>Eixo Maquina 3</eixo><meta>6</meta><qtd>6</qtd><rolosad>4</rolosad><rolocad>44</rolocad></producao></producoesM3>
 </producoes>
