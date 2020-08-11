@@ -54,7 +54,7 @@ ser = serial.Serial(
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
-    timeout=0 #mudar pra 0 que fica bem mais rapido, 1 é melhor pra debug
+    timeout=0 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
     )
     
 ff = struct.pack('B', 0xff)
@@ -70,6 +70,7 @@ parada = False
 produzindo = False
 configurando = True
 bateu = False
+flagVazio = True
 
 dictOperadores = {}
 dictParadas = {}
@@ -121,6 +122,7 @@ class Server(Thread): #
         self.start()
         
     def run(self):
+        global flagVazio
         while True:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR, 1 )
@@ -142,7 +144,24 @@ class Server(Thread): #
                                 root = ET.fromstring(stream)
                                 with open(arq_config,'w') as arq:
                                     arq.write(ET.tostring(root).decode())
+                                flagVazio = False
                             else:
+                                if dictXmlProd['fim'] == '':
+                                    dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat()
+                                    xml.SalvarAlteracoes(True, False)
+                                    dictXmlProd['fim'] = ''
+                                    xml.SalvarAlteracoes(True, False)
+
+                                if dictXmlParada['duracao'] == '':
+                                    dictXmlParada['duracao'] = (datetime.now().replace(microsecond=0) - datetime.fromisoformat(dictXmlParada['data'])).total_seconds()  #nao é o ideal, mas é o que temos
+                                    if dictXmlParada['tipo'] == '':
+                                        dictXmlParada['tipo'] = NAO_INFORMADO
+                                        
+                                    xml.SalvarAlteracoes(False, True)
+                                    dictXmlParada['tipo'] = ''
+                                    dictXmlParada['duracao'] = ''
+                                    xml.SalvarAlteracoes(False, True)
+
                                 xmlStream = ET.parse(arq_parada)
                                 xmlstr = ET.tostring(xmlStream.getroot()).decode()
                                 client.send(bytes(xmlstr, "utf-8"))
@@ -646,6 +665,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
     rtc.telaAtual = 0
     
     if tela is T_INICIAL:
+        global flagVazio
         global primeiro 
         global inicioProd
         
@@ -664,11 +684,22 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             except:
                 nextion.Enviar("tIP", "Aguarde, conectando")
             
-            
         if not sucessoRede:
             nextion.Enviar("tIP", "Falha ao conectar")
                 
-        
+        xml = ET.parse(arq_config)
+        raiz = xml.getroot()
+
+        for coisa in raiz.findall('./operadores'):
+            if not coisa:
+                nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
+                nextion.Enviar("tMsg2", "Importe arquivo")
+                while flagVazio:
+                    pass        #deve ter um jeito muito melhor de fazer isso
+                nextion.Enviar("tMsg", "Arquivo Importado!")
+                nextion.Enviar("tMsg2", " ")
+
+            
         nextion.Enviar("tsw 255,1", False, False)
 
         primeiro = False
