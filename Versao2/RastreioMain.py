@@ -682,10 +682,10 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                 sucessoRede = True
                 break
             except:
-                nextion.Enviar("tIP", "Aguarde, conectando")
+                nextion.Enviar("tIP", "Aguarde. Conectando à Internet")
             
         if not sucessoRede:
-            nextion.Enviar("tIP", "Falha ao conectar")
+            nextion.Enviar("tIP", "Falha ao conectar à Internet")
                 
         xml = ET.parse(arq_config)
         raiz = xml.getroot()
