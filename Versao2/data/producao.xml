@@ -15,7 +15,7 @@
 </producao>
 </producoesM1>
 <producoesM2>
-<producao id="1"><lote>FP99/20</lote><op>45</op><inicio>2020-08-04T00:39:38</inicio><fim>2020-08-04T00:40:01</fim><maquina>2</maquina><operador>Rui</operador><eixo>Erro</eixo><meta>6</meta><qtd>6</qtd><rolosad>49</rolosad><rolocad>45</rolocad></producao></producoesM2>
+</producoesM2>
 <producoesM3>
 <producao id="2">
     <lote>NP235</lote>
@@ -43,5 +43,5 @@
     <rolosad>500</rolosad>
     <rolocad>495</rolocad>
 </producao>
-<producao id="4"><lote>FP55/20</lote><op>44</op><inicio>2020-08-09T15:24:49</inicio><fim>2020-08-09T15:25:08</fim><maquina>3</maquina><operador>Jonathan</operador><eixo>Eixo Maquina 3</eixo><meta>6</meta><qtd>6</qtd><rolosad>4</rolosad><rolocad>44</rolocad></producao></producoesM3>
+<producao id="4"><lote>FP49/20</lote><op>50</op><inicio>2020-08-13T15:20:10</inicio><fim /><maquina>3</maquina><operador>Luiza</operador><eixo>Eixo 2</eixo><meta>2</meta><qtd>0</qtd><rolosad>450</rolosad><rolocad>3333</rolocad></producao><producao id="5"><lote>FP5/20</lote><op>5</op><inicio>2020-08-13T15:25:01</inicio><fim /><maquina>3</maquina><operador>Jonathan</operador><eixo>Nao encontrado</eixo><meta>20</meta><qtd>0</qtd><rolosad>55</rolosad><rolocad>5</rolocad></producao><producao id="6"><lote>FP49/20</lote><op>44</op><inicio>2020-08-13T15:30:15</inicio><fim /><maquina>3</maquina><operador>Jonathan</operador><eixo>Nao encontrado</eixo><meta>2</meta><qtd>0</qtd><rolosad>450</rolosad><rolocad>49</rolocad></producao><producao id="7"><lote>FP49/20</lote><op>45</op><inicio>2020-08-13T15:46:06</inicio><fim /><maquina>3</maquina><operador>Nilo</operador><eixo>Eixo 12</eixo><meta>2</meta><qtd>0</qtd><rolosad>49</rolosad><rolocad>34</rolocad></producao><producao id="8"><lote>FP34/20</lote><op>38</op><inicio>2020-08-13T15:48:33</inicio><fim /><maquina>3</maquina><operador>Nilo</operador><eixo>Eixo 12</eixo><meta>2</meta><qtd>0</qtd><rolosad>23</rolosad><rolocad>38</rolocad></producao><producao id="9"><lote>FP49/20</lote><op>9</op><inicio>2020-08-13T15:52:57</inicio><fim /><maquina>3</maquina><operador>Nilo</operador><eixo>Eixo 2</eixo><meta>20004</meta><qtd>0</qtd><rolosad>44</rolosad><rolocad>459</rolocad></producao></producoesM3>
 </producoes>

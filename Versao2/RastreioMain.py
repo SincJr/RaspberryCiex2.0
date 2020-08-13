@@ -54,7 +54,7 @@ ser = serial.Serial(
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
-    timeout=0 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
+    timeout=0.1 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
     )
     
 ff = struct.pack('B', 0xff)
@@ -151,21 +151,25 @@ class Server(Thread): #
                                     xml.SalvarAlteracoes(True, False)
                                     dictXmlProd['fim'] = ''
                                     xml.SalvarAlteracoes(True, False)
+                                    print("AQUI")
 
                                 if dictXmlParada['duracao'] == '':
                                     dictXmlParada['duracao'] = (datetime.now().replace(microsecond=0) - datetime.fromisoformat(dictXmlParada['data'])).total_seconds()  #nao é o ideal, mas é o que temos
                                     if dictXmlParada['tipo'] == '':
                                         dictXmlParada['tipo'] = NAO_INFORMADO
+                                    print("E AQUI TB")
                                         
                                     xml.SalvarAlteracoes(False, True)
                                     dictXmlParada['tipo'] = ''
                                     dictXmlParada['duracao'] = ''
                                     xml.SalvarAlteracoes(False, True)
 
+                                print("EIIIII")
                                 xmlStream = ET.parse(arq_parada)
                                 xmlstr = ET.tostring(xmlStream.getroot()).decode()
                                 client.send(bytes(xmlstr, "utf-8"))
 
+                                print("POXA :/")
                                 xmlStream = ET.parse(arq_prod)
                                 xmlstr = ET.tostring(xmlStream.getroot()).decode()
                                 client.send(bytes(xmlstr, "utf-8"))
@@ -319,7 +323,7 @@ def calcularMeta():
     elif rolo is '25x45':
         calculada = (dictXmlProd['rolocad']) * 9.0909
     else:
-        calculada = 69
+        calculada = 2000
 
     return round(calculada)
 
@@ -332,13 +336,16 @@ class MexerXml():
         xmlRoot = xml.getroot()
         eixo =''
         
-        for eixos in xmlRoot.findall('./eixos/eixo'):
-            nomeRolo = eixos.find('./rolo/nome').text
-            if nomeRolo == rolo:
-                eixo = eixos.find('./nome').text
+        try:
+            for eixos in xmlRoot.findall('./eixos/eixo'):
+                nomeRolo = eixos.find('./rolos/rolo/nome').text
+                if nomeRolo == rolo:
+                    eixo = eixos.find('./nome').text
+        except:
+            eixo = 'Nao encontrado'
 
         if eixo == '':
-            eixo = 'Erro'
+            eixo = 'Nao encontrado'
     
         dictXmlProd['eixo'] = eixo
     
@@ -586,6 +593,7 @@ class Nextion(Thread): #
                             msg = msg.replace("'", '')
                             msg = msg.replace('\\x', '')
                             sinais.append(msg)
+                            print('q porra' + str(msg))
                     scrollTela = int(sinais[0], 16)
                     direcao = sinais[1]
 
@@ -597,7 +605,7 @@ class Nextion(Thread): #
 
             if texto:
                 for coisa in texto:
-                    logicaPrincipal(botaoOK, False, strRecebida)  #vai pra funcao das telas
+                    logicaPrincipal(botaoOK, False, coisa)  #vai pra funcao das telas
                     
             if Alt:
                 logicaPrincipal(botaoTela, False, qualOpcao)
@@ -686,18 +694,19 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             
         if not sucessoRede:
             nextion.Enviar("tIP", "Falha ao conectar à Internet")
-                
-        xml = ET.parse(arq_config)
-        raiz = xml.getroot()
-
-        for coisa in raiz.findall('./operadores'):
-            if not coisa:
-                nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
-                nextion.Enviar("tMsg2", "Importe arquivo")
-                while flagVazio:
-                    pass        #deve ter um jeito muito melhor de fazer isso
+            
+        while flagVazio:
+            try:        
+                xmlConf = ET.parse(arq_config)
+                raiz = xmlConf.getroot()
                 nextion.Enviar("tMsg", "Arquivo Importado!")
                 nextion.Enviar("tMsg2", " ")
+                flagVazio = False
+            except:
+                nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
+                nextion.Enviar("tMsg2", "Importe arquivo")
+
+                
 
             
         nextion.Enviar("tsw 255,1", False, False)
@@ -809,16 +818,6 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             if mensagem == '>' or mensagem == '<':
                 colunaAtual = colunaAtual + 1 if mensagem == '>' else colunaAtual - 1
                 
-                for lin in range(linhas):
-                    nome = conjuntoOperadores[colunaAtual][lin]
-                    if nome == ' ':
-                        nextion.Enviar("vis tO" + str(lin) + ",0", False, False)
-                        visivel[lin] = 0
-                    else:
-                        if visivel[lin] is not 1:
-                            nextion.Enviar("vis tO" + str(lin) + ",1", False, False)
-                        nextion.Enviar("tO"+str(lin), nome)
-                        visivel[lin] = 1
                 
                 if colunas > (1+colunaAtual):
                     nextion.Enviar("vis bR,1",False,False)  
@@ -829,10 +828,22 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                     nextion.Enviar("vis bL,1",False,False)
                 else:
                     nextion.Enviar("vis bL,0",False,False)
+                    
+                    
+                for lin in range(linhas):
+                    nome = conjuntoOperadores[colunaAtual][lin]
+                    if nome == ' ':
+                        nextion.Enviar("tO" + str(lin), " ")
+                    else:
+                        nextion.Enviar("tO"+str(lin), nome)
+
+                
+                
                 
                 
             else:
-                operador = dictOperadores[mensagem]
+                escolha = mensagem + colunaAtual*4
+                operador = dictOperadores[escolha]
                 dictXmlProd['operador'] = operador
                 dictXmlParada['operador'] = operador
             
@@ -921,16 +932,6 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             if mensagem == '>' or mensagem == '<':
                 colunaAtual = colunaAtual + 1 if mensagem == '>' else colunaAtual - 1
                 
-                for lin in range(linhas):
-                    tipo = conjuntoParadas[colunaAtual][lin]
-                    if tipo == ' ':
-                        nextion.Enviar("vis tP" + str(lin) + ",0", False, False)
-                        visivel[lin] = 0
-                    else:
-                        if visivel[lin] is not 1:
-                            nextion.Enviar("vis tP" + str(lin) + ",1", False, False)
-                        nextion.Enviar("tP"+str(lin), tipo)
-                        visivel[lin] = 1
                 
                 if colunas > (1+colunaAtual):
                     nextion.Enviar("vis bR,1",False,False)  
@@ -941,10 +942,19 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                     nextion.Enviar("vis bL,1",False,False)
                 else:
                     nextion.Enviar("vis bL,0",False,False)
-                
+                    
+                for lin in range(linhas):
+                    tipo = conjuntoParadas[colunaAtual][lin]
+                    
+                    if tipo == ' ':
+                        nextion.Enviar("tP" + str(lin), " ")
+                        
+                    else:
+                        nextion.Enviar("tP"+str(lin), tipo)
                 
             else:
-                tipoParada = dictParadas[mensagem]
+                escolha = mensagem + colunaAtual*4
+                tipoParada = dictParadas[escolha]
                 dictXmlParada['tipo'] = tipoParada
                 print(dictXmlParada['tipo'])
                 xml.SalvarAlteracoes(False, True)

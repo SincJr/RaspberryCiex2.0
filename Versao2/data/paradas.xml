@@ -29,7 +29,7 @@
     <operador>Mauricio</operador>
     <duracao>503</duracao>
 </parada>
-<parada id="3"><data>2020-08-04T00:39:45</data><lote>FP99/20</lote><op>45</op><tipo>Banheiro</tipo><maquina>2</maquina><operador>Rui</operador><duracao>3</duracao></parada><parada id="4"><data>2020-08-04T00:39:51</data><lote>FP99/20</lote><op>45</op><tipo>Nao informada</tipo><maquina>2</maquina><operador>Rui</operador><duracao>2.0</duracao></parada></paradasM2>
+</paradasM2>
 <paradasM3>
 <parada id="1">
     <data>2018-08-09T09:14:58z</data>
@@ -40,5 +40,5 @@
     <operador>Joao</operador>
     <duracao>137</duracao>
 </parada>
-<parada id="2"><data>2020-08-09T15:24:53</data><lote>FP55/20</lote><op>44</op><tipo>Churras</tipo><maquina>3</maquina><operador>Jonathan</operador><duracao>11</duracao></parada></paradasM3>
+<parada id="2"><data>2021-03-10T21:54:53</data><lote>FP49/21</lote><op>450</op><tipo>Janta</tipo><maquina>3</maquina><operador>Vini</operador><duracao>22</duracao></parada><parada id="3"><data>2021-03-10T21:55:19</data><lote>FP49/21</lote><op>450</op><tipo>Janta</tipo><maquina>3</maquina><operador>Vini</operador><duracao>6</duracao></parada><parada id="4"><data>2020-08-13T15:20:22</data><lote>FP49/20</lote><op>50</op><tipo>Cafe</tipo><maquina>3</maquina><operador>Luiza</operador><duracao>16</duracao></parada><parada id="5"><data>2020-08-13T15:25:24</data><lote>FP5/20</lote><op>5</op><tipo>Cafe</tipo><maquina>3</maquina><operador>Jonathan</operador><duracao>38</duracao></parada><parada id="6"><data>2020-08-13T15:30:39</data><lote>FP49/20</lote><op /><tipo>Almoco</tipo><maquina>3</maquina><operador>Jonathan</operador><duracao>16</duracao></parada><parada id="7"><data>2020-08-13T15:31:27</data><lote>FP49/20</lote><op /><tipo>Cafe</tipo><maquina>3</maquina><operador>Jonathan</operador><duracao>20</duracao></parada><parada id="8"><data>2020-08-13T15:32:18</data><lote>FP49/20</lote><op /><tipo>Cafe</tipo><maquina>3</maquina><operador>Jonathan</operador><duracao>13</duracao></parada><parada id="9"><data>2020-08-13T15:46:12</data><lote>FP49/20</lote><op>45</op><tipo /><maquina>3</maquina><operador>Nilo</operador><duracao /></parada><parada id="10"><data>2020-08-13T15:48:50</data><lote>FP34/20</lote><op>38</op><tipo>Cafe</tipo><maquina>3</maquina><operador>Nilo</operador><duracao>27</duracao></parada><parada id="11"><data>2020-08-13T15:51:19</data><lote>FP34/20</lote><op>38</op><tipo>Banheiro</tipo><maquina>3</maquina><operador>Nilo</operador><duracao>6</duracao></parada></paradasM3>
 </paradas>
