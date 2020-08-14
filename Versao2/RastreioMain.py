@@ -50,7 +50,7 @@ NAO_INFORMADO = "Nao informada"
 #
 ser = serial.Serial(
     port='/dev/ttyS0',
-    baudrate=31250,           
+    baudrate=19200,           
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
