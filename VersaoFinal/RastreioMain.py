@@ -89,7 +89,7 @@ elif MAQUINA is 2:
 elif MAQUINA is 3:
     rolos = {0:'100x10', 1:'100x4,5', 2:'12x10', 3:'12x4,5'} 
 dictXmlProd = {'lote':'', 'op':'', 'inicio':'', 'fim':'', 'maquina':str(MAQUINA), 'operador':'', 'eixo':'', 'meta':'', 'qtd':'0', 'rolosad':'', 'rolocad':''}
-dictXmlParada = {'data':'', 'lote':'', 'op':'', 'tipo':'', 'maquina':str(MAQUINA), 'operador':'', 'duracao':''}
+dictXmlParada = {'data':'', 'lote':'', 'op':'', 'tipo':NAO_INFORMADO, 'maquina':str(MAQUINA), 'operador':'', 'duracao':'300'}
 
 idProd = ''
 idParada = ''
@@ -220,6 +220,7 @@ class Clock(Thread): #
                         
                     
             if self.telaAtual is T_PRODUZINDO:
+                dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat()
                 xml.SalvarAlteracoes(True, False)
         
     def pegarHora(self):
@@ -303,7 +304,8 @@ def FuncInterrupt(porta):
         producao += 1
         dictXmlProd['qtd'] = str(producao)
         timerAFK = False
-
+        dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat() 
+        
         if produzindo is False:
             produzindo = True
             parada = False
@@ -356,6 +358,7 @@ class MexerXml():
             eixo = 'Nao encontrado'
     
         dictXmlProd['eixo'] = eixo
+        
     
     def GerarNovaProd(self):
         global arq_prod
@@ -696,20 +699,30 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         if not sucessoRede:
             nextion.Enviar("tIP", "Falha ao conectar à Internet")
             
-        while flagVazio:
-            try:        
+        while flagVazio: 
+            try:     
                 xmlConf = ET.parse(arq_config)
                 raiz = xmlConf.getroot()
-                nextion.Enviar("tMsg", "Arquivo Importado!")
-                nextion.Enviar("tMsg2", " ")
-                flagVazio = False
+            
+                for pessoa in raiz.findall('./operadores/operador'):
+                    flagVazio = False
+                    break;
+                for pausa in raiz.findall('./paradas/parada'):
+                    flagVazio = False
+                    break
+                for eixo2 in raiz.findall('./eixos/eixo'):
+                    flagVazio = False
+                    break
+            
+                nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
+                nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
             except:
                 nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
-                nextion.Enviar("tMsg2", "Importe arquivo")
-
-                
-
+                nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
+           
             
+        nextion.Enviar("tMsg", "Arquivo de Configuracao Importado!")
+        nextion.Enviar("tMsg2", " ")
         nextion.Enviar("tsw 255,1", False, False)
 
         primeiro = False
@@ -877,6 +890,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                 print(dictXmlProd)
                 xml.GerarNovaProd()
                 dictXmlProd['inicio'] = datetime.now().replace(microsecond=0).isoformat()
+                dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat()
                 inicioProd = False
 
             produzindo = True
