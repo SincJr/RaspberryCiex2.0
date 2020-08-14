@@ -137,7 +137,9 @@ class Server(Thread): #
                         print('Connectado a', addr)
                         btipo = client.recv(1)
                         tipo = btipo.decode("utf-8")
+                        print("ECHO " + str(tipo))
                         if btipo is 'c' or 'p':  # c = config (ou seja, receber info de maquina), p = prod/paradas (ou seja, enviar xmls)
+                            print('masss')
                             client.send(btipo)     # echo
                             if tipo is 'c':
                                 stream = client.recv(1024000)
@@ -146,14 +148,17 @@ class Server(Thread): #
                                     arq.write(ET.tostring(root).decode())
                                 flagVazio = False
                             else:
-                                if dictXmlProd['fim'] == '':
+                                print('entrou')
+                                reatualizarParada = False
+                                reatualizarProd = False
+                                if dictXmlProd['fim'] == '' and idProd:
                                     dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat()
                                     xml.SalvarAlteracoes(True, False)
                                     dictXmlProd['fim'] = ''
-                                    xml.SalvarAlteracoes(True, False)
                                     print("AQUI")
+                                    reatualizarProd = True
 
-                                if dictXmlParada['duracao'] == '':
+                                if dictXmlParada['duracao'] == '' and idParada:
                                     dictXmlParada['duracao'] = (datetime.now().replace(microsecond=0) - datetime.fromisoformat(dictXmlParada['data'])).total_seconds()  #nao é o ideal, mas é o que temos
                                     if dictXmlParada['tipo'] == '':
                                         dictXmlParada['tipo'] = NAO_INFORMADO
@@ -162,17 +167,20 @@ class Server(Thread): #
                                     xml.SalvarAlteracoes(False, True)
                                     dictXmlParada['tipo'] = ''
                                     dictXmlParada['duracao'] = ''
-                                    xml.SalvarAlteracoes(False, True)
+                                    reatualizarParada = True
 
-                                print("EIIIII")
+
                                 xmlStream = ET.parse(arq_parada)
                                 xmlstr = ET.tostring(xmlStream.getroot()).decode()
                                 client.send(bytes(xmlstr, "utf-8"))
-
+                                
                                 print("POXA :/")
                                 xmlStream = ET.parse(arq_prod)
                                 xmlstr = ET.tostring(xmlStream.getroot()).decode()
                                 client.send(bytes(xmlstr, "utf-8"))
+                                print('saiu, finalmente')
+                                xml.SalvarAlteracoes(reatualizarProd, reatualizarParada)
+                                
                         else:
                             print('Erro!')
                 except:
@@ -504,7 +512,7 @@ class Nextion(Thread): #
                             msg = msg.replace('b', '', 1)
                             msg = msg.replace("'", '')
                             msg = msg.replace('\\x', '')
-                            msg = int(msg, 16)
+                            msg = int(msg, 10)
                             sinais.append(msg)
                     botaoOK = sinais[0]
         
@@ -536,8 +544,6 @@ class Nextion(Thread): #
                             sair = True
                         elif msg == b'\t':
                             sinalTela = 9
-                        elif msg == b'17':
-                            sinalTela = 11
                         else:            
                             msg = str(msg)
                             msg = msg.replace('b', '', 1)
@@ -566,15 +572,7 @@ class Nextion(Thread): #
                             if msg == 'i':
                                 msg = 69
                             else:
-                                msg = int(msg, 16)
-                            if msg is 17:       #####
-                                msg = 11        #####
-                            elif msg is 18:
-                                msg = 12
-                            elif msg is 19:
-                                msg = 13
-                            elif msg is 20:
-                                msg = 14
+                                msg = int(msg, 10)
                             sinais.append(msg)
                     botaoTela = sinais[0]
                     qualOpcao = sinais[1]
@@ -593,8 +591,9 @@ class Nextion(Thread): #
                             msg = msg.replace("'", '')
                             msg = msg.replace('\\x', '')
                             sinais.append(msg)
-                            print('q porra' + str(msg))
-                    scrollTela = int(sinais[0], 16)
+                    print('q porra' + str(sinais[0]))
+                    print('q porra' + str(sinais[1]))
+                    scrollTela = int(sinais[0], 10)
                     direcao = sinais[1]
 
                     
@@ -671,6 +670,8 @@ def logicaPrincipal(tela, entrando, mensagem):   #
     global configurando
              #aqui se poe os comandos que vao rodar quando ENTRAR na pagina
     rtc.telaAtual = 0
+    
+    print('logica principal ' + str(tela) + ' = ' + str(mensagem))
     
     if tela is T_INICIAL:
         global flagVazio
