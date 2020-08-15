@@ -55,7 +55,7 @@ ser = serial.Serial(
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
-    timeout=0.3 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
+    timeout=0.05 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
     )
     
 ff = struct.pack('B', 0xff)
