@@ -12,6 +12,7 @@ from math import ceil
 import subprocess
 import netifaces
 import RPi.GPIO as GPIO
+from time import sleep
 
 #
 #Constantes
@@ -54,7 +55,7 @@ ser = serial.Serial(
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
-    timeout=0.5 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
+    timeout=0.3 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
     )
     
 ff = struct.pack('B', 0xff)
@@ -109,10 +110,12 @@ file_config = 'ConfigM.xml'
 file_prod = 'producao.xml'
 file_paradas = 'paradas.xml'
 
-full_file = os.path.abspath(os.path.join('data'))
+full_file = '/home/pi/RaspberryCiex2.0/VersaoFinal/data'
 arq_config = os.path.abspath(os.path.join(full_file, file_config))
 arq_parada = os.path.abspath(os.path.join(full_file, file_paradas))
 arq_prod = os.path.abspath(os.path.join(full_file, file_prod))
+
+print(arq_config)
 
 
 class Server(Thread): #
@@ -694,31 +697,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         global inicioProd
         
         rtc.telaAtual = 0
-        
-        nextion.Enviar("dim=100", False, False)
 
-        while flagVazio: 
-            try:     
-                xmlConf = ET.parse(arq_config)
-                raiz = xmlConf.getroot()
-            
-                for pessoa in raiz.findall('./operadores/operador'):
-                    flagVazio = False
-                    break
-                for pausa in raiz.findall('./paradas/parada'):
-                    flagVazio = False
-                    break
-                for eixo2 in raiz.findall('./eixos/eixo'):
-                    flagVazio = False
-                    break
-            
-                print('loop')
-            
-                nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
-                nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
-            except:
-                nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
-                nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
            
         print('inicial')
         
@@ -1016,6 +995,36 @@ def logicaPrincipal(tela, entrando, mensagem):   #
 
 nextion = Nextion()
 Server()
+
+nextion.Enviar("dim=100", False, False)
+
+while flagVazio: 
+    try:     
+        xmlConf = ET.parse(arq_config)
+        raiz = xmlConf.getroot()
+    
+        start = datetime.now()
+        
+        while datetime.now() - start < timedelta(seconds=0.5):
+            pass
+    
+        for pessoa in raiz.findall('./operadores/operador'):
+            flagVazio = False
+            break
+        for pausa in raiz.findall('./paradas/parada'):
+            flagVazio = False
+            break
+        for eixo2 in raiz.findall('./eixos/eixo'):
+            flagVazio = False
+            break
+        print('loop')
+    
+        nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
+        nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
+    except:
+        nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
+        nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
+
 xml = MexerXml()
 rtc = Clock()
 DetectaAFK()
