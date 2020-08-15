@@ -54,7 +54,7 @@ ser = serial.Serial(
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
-    timeout=0.1 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
+    timeout=0.01 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
     )
     
 ff = struct.pack('B', 0xff)
@@ -185,6 +185,7 @@ class Server(Thread): #
                             print('Erro!')
                 except:
                     pass
+                
 
 
 class Clock(Thread): #
@@ -218,7 +219,13 @@ class Clock(Thread): #
                 if self.telaAtual is T_PRODUZINDO and not nextion.atualizando:
                         nextion.Atualizar(False, False)
                         
-                    
+                if self.telaAtual is T_INICIAL:
+                    try:
+                        ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+                        nextion.Enviar("tIP", ip)
+                    except:
+                        nextion.Enviar("tIP", "Conectando à Internet")
+
             if self.telaAtual is T_PRODUZINDO:
                 dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat()
                 xml.SalvarAlteracoes(True, False)
@@ -279,7 +286,6 @@ class BateuMeta(Thread):
         self.start()
 
     def run(self):
-        flag = True
         global produzindo
         global bateu
         while True:
@@ -295,7 +301,6 @@ def FuncInterrupt(porta):
     global producao
     global parada
     global produzindo
-    global flagProd
     global timerAFK
     
     print("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
@@ -631,6 +636,12 @@ class Nextion(Thread): #
             nextion.Enviar('tRolo', str(rolo))
             nextion.Enviar('tMeta', str(dictXmlProd['meta']))
             nextion.Enviar('tOP', str(dictXmlProd['op']))
+
+            try:
+                ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+                nextion.Enviar("tIP", ip)
+            except:
+                nextion.Enviar("tIP", "Conectando à Internet")
             
             if bateu:
                 nextion.Enviar("vis bProd,1", False, False)
@@ -681,24 +692,9 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         global primeiro 
         global inicioProd
         
-        startConectando = datetime.now()
         
         nextion.Enviar("dim=100", False, False)
-        
-        sucessoRede = False
-        
-        while datetime.now() - startConectando < timedelta(minutes=0.5):
-            try:
-                ip = netifaces.ifaddresses('eth0')[2][0]['addr']
-                nextion.Enviar("tIP", ip)
-                sucessoRede = True
-                break
-            except:
-                nextion.Enviar("tIP", "Aguarde. Conectando à Internet")
-            
-        if not sucessoRede:
-            nextion.Enviar("tIP", "Falha ao conectar à Internet")
-            
+
         while flagVazio: 
             try:     
                 xmlConf = ET.parse(arq_config)
@@ -706,7 +702,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             
                 for pessoa in raiz.findall('./operadores/operador'):
                     flagVazio = False
-                    break;
+                    break
                 for pausa in raiz.findall('./paradas/parada'):
                     flagVazio = False
                     break
@@ -895,7 +891,6 @@ def logicaPrincipal(tela, entrando, mensagem):   #
 
             produzindo = True
             parada = False
-            start = datetime.now()
             nextion.Atualizar(False, True)
             rtc.telaAtual = 10
             xml.SalvarAlteracoes(True, False)
