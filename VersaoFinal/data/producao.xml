@@ -4,5 +4,5 @@
 <producoesM2>
 </producoesM2>
 <producoesM3>
-</producoesM3>
+<producao id="1"><lote>FP55/20</lote><op>50</op><inicio>2020-08-15T16:12:31</inicio><fim>2020-08-15T16:12:31</fim><maquina>3</maquina><operador>Joao</operador><eixo>Eixo 2</eixo><meta>20</meta><qtd>0</qtd><rolosad>09</rolosad><rolocad>44</rolocad></producao></producoesM3>
 </producoes>

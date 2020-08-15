@@ -54,7 +54,7 @@ ser = serial.Serial(
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
-    timeout=0.01 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
+    timeout=0.5 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
     )
     
 ff = struct.pack('B', 0xff)
@@ -221,6 +221,7 @@ class Clock(Thread): #
                         
                 if self.telaAtual is T_INICIAL:
                     try:
+                        print('esse')
                         ip = netifaces.ifaddresses('eth0')[2][0]['addr']
                         nextion.Enviar("tIP", ip)
                     except:
@@ -630,7 +631,7 @@ class Nextion(Thread): #
         if not menosInfo:
             telinhaTemp = rtc.telaAtual
             self.atualizando = True
-            rtc.telaAtual = 0
+            rtc.telaAtual = -1
             nextion.Enviar('tLote', str(dictXmlProd['lote']))
             nextion.Enviar('tOperador', str(dictXmlProd['operador']))
             nextion.Enviar('tRolo', str(rolo))
@@ -683,7 +684,7 @@ class Nextion(Thread): #
 def logicaPrincipal(tela, entrando, mensagem):   #
     global configurando
              #aqui se poe os comandos que vao rodar quando ENTRAR na pagina
-    rtc.telaAtual = 0
+    rtc.telaAtual = -1
     
     print('logica principal ' + str(tela) + ' = ' + str(mensagem))
     
@@ -692,6 +693,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         global primeiro 
         global inicioProd
         
+        rtc.telaAtual = 0
         
         nextion.Enviar("dim=100", False, False)
 
@@ -710,13 +712,16 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                     flagVazio = False
                     break
             
+                print('loop')
+            
                 nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
                 nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
             except:
                 nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
                 nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
            
-            
+        print('inicial')
+        
         nextion.Enviar("tMsg", "Arquivo de Configuracao Importado!")
         nextion.Enviar("tMsg2", " ")
         nextion.Enviar("tsw 255,1", False, False)
@@ -732,7 +737,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                 nextion.Atualizar(True, False)
                 rtc.telaAtual = 1
         else:
-            rtc.telaAtual = 0
+            rtc.telaAtual = -1
             if tela is not T_DATAHORA:
                 print('wasssss')
                 global horario
@@ -899,7 +904,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         else:
             xml.SalvarAlteracoes(True, False)
             produzindo = False
-            rtc.telaAtual = 0
+            rtc.telaAtual = -1
             
     if tela is T_PARADAS:
         configurando = False
