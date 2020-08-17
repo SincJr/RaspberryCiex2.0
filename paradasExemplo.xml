@@ -1,0 +1,8 @@
+<paradas>
+<paradasM1>
+</paradasM1>
+<paradasM2>
+</paradasM2>
+<paradasM3>
+<parada id="1"><data>2020-08-16T23:02:36</data><lote>FP450/20</lote><op>49</op><tipo>Cafe</tipo><maquina>3</maquina><operador>Lucas</operador><duracao>9</duracao></parada><parada id="2"><data>2020-08-16T23:09:03</data><lote>FP238/20</lote><op>389</op><tipo>Cafe</tipo><maquina>3</maquina><operador>Luiza</operador><duracao>5</duracao></parada><parada id="3"><data>2020-08-16T23:09:22</data><lote>FP238/20</lote><op>389</op><tipo>Nao informada</tipo><maquina>3</maquina><operador>Luiza</operador><duracao>4.0</duracao></parada></paradasM3>
+</paradas>
