@@ -698,9 +698,11 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         
         rtc.telaAtual = 0
 
+        nextion.Enviar("dim=100", False, False)
            
         print('inicial')
         
+
         nextion.Enviar("tMsg", "Arquivo de Configuracao Importado!")
         nextion.Enviar("tMsg2", " ")
         nextion.Enviar("tsw 255,1", False, False)
