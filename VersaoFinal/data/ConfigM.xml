@@ -1,1 +1,1 @@
-<config><operadores><operador>Joao</operador><operador>Lucas</operador><operador>Luiza</operador></operadores><paradas><parada>Banheiro</parada><parada>Cafe</parada><parada>Almoco</parada></paradas><eixos><eixo><nome>Eixo 2</nome><rolos><rolo><nome>100x4,5</nome><qtd>30</qtd></rolo></rolos></eixo></eixos></config>
+<config><operadores></operadores><paradas></paradas><eixos></eixos></config>
