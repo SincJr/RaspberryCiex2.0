@@ -61,7 +61,7 @@ ser = serial.Serial(
 ff = struct.pack('B', 0xff)
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(INTERRUPT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(INTERRUPT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 #
 #Variaveis Globais
@@ -1030,7 +1030,7 @@ rtc = Clock()
 DetectaAFK()
 BateuMeta()
 
-GPIO.add_event_detect(INTERRUPT_PIN, GPIO.RISING, callback=FuncInterrupt, bouncetime=300)
+GPIO.add_event_detect(INTERRUPT_PIN, GPIO.FALLING, callback=FuncInterrupt, bouncetime=300)
                 
 if primeiro:
         logicaPrincipal(T_INICIAL, True, False)
