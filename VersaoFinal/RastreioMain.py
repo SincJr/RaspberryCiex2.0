@@ -362,7 +362,7 @@ class MexerXml():
                 nomeRolo = eixos.find('./rolos/rolo/nome').text
                 if nomeRolo == rolo:
                     eixo = eixos.find('./nome').text
-                    qtdRolos = eixos.find('./rolos/rolo/qtd')
+                    qtdRolos = int(eixos.find('./rolos/rolo/qtd').text)
         except:
             eixo = 'Nao encontrado'
 
