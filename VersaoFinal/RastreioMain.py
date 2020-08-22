@@ -82,9 +82,10 @@ lote = ''
 operador = ''
 meta = ''
 rolo = ''
+qtdRolos = 0
 
 if MAQUINA is 1:
-    rolos = {0:'25x10', 1:'25x09', 2:'25x45'} 
+    rolos = {0:'25x10', 1:'25x0,9', 2:'25x4,5'} 
 elif MAQUINA is 2:
     rolos = {0:'50x10', 1:'50x4,5'}
 elif MAQUINA is 3:
@@ -333,16 +334,16 @@ def progressoMeta():
 
 
 def calcularMeta():
-    print(dictXmlProd['rolocad'])
-    print(type(dictXmlProd['rolocad']))
-    if rolo is '25x10':
-        calculada = dictXmlProd['rolocad'] * 4
-    elif rolo is '25x09':
-        calculada = (dictXmlProd['rolocad']) * 4.4545 
-    elif rolo is '25x45':
-        calculada = (dictXmlProd['rolocad']) * 9.0909
+    global rolo
+    global qtdRolos
+
+    if qtdRolos == 0:
+        calculada = -1
     else:
-        calculada = 2000
+        fator = rolo.split("'")
+        fator = fator[0].replace(',', '.')
+        _, fator = fator.split('x')
+        calculada = (float(dictXmlProd['rolocad'])/float(fator))*qtdRolos
 
     return round(calculada)
 
@@ -350,7 +351,8 @@ def calcularMeta():
 class MexerXml():
     def PegarEixo(self, rolo):
         global arq_config
-        
+        global qtdRolos
+
         xml = ET.parse(arq_config)
         xmlRoot = xml.getroot()
         eixo =''
@@ -360,6 +362,7 @@ class MexerXml():
                 nomeRolo = eixos.find('./rolos/rolo/nome').text
                 if nomeRolo == rolo:
                     eixo = eixos.find('./nome').text
+                    qtdRolos = eixos.find('./rolos/rolo/qtd')
         except:
             eixo = 'Nao encontrado'
 
@@ -764,14 +767,14 @@ def logicaPrincipal(tela, entrando, mensagem):   #
     if tela is T_METsemAD:
         configurando = True
         if entrando:
-            pass
+            nextion.Enviar('tMetSAd', '3500')
         else:
             dictXmlProd['rolosad'] = mensagem
             
     if tela is T_METcomAD:
         configurando = True
         if entrando:
-            pass
+            nextion.Enviar('tMetCAd', '3450')
         else:
             dictXmlProd['rolocad'] = int(mensagem)
             print(mensagem)
@@ -857,8 +860,10 @@ def logicaPrincipal(tela, entrando, mensagem):   #
     if tela is T_META:
         configurando = True
         if entrando:
-            nextion.Enviar('tMeta', str(calcularMeta()))
-            print(str(calcularMeta()))
+            metaCalculada = str(calcularMeta())
+            if metaCalculada != '-1':
+                nextion.Enviar('tMeta', metaCalculada)
+            
         else:
             dictXmlProd['meta'] = mensagem
 
