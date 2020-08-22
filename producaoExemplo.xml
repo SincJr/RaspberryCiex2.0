@@ -1,0 +1,8 @@
+<producoes>
+<producoesM1>
+</producoesM1>
+<producoesM2>
+</producoesM2>
+<producoesM3>
+<producao id="1"><lote>FP450/20</lote><op>49</op><inicio>2020-08-16T23:02:15</inicio><fim>2020-08-16T23:03:06</fim><maquina>3</maquina><operador>Lucas</operador><eixo>Nao encontrado</eixo><meta>20</meta><qtd>20</qtd><rolosad>389</rolosad><rolocad>274</rolocad></producao><producao id="2"><lote>FP238/20</lote><op>389</op><inicio>2020-08-16T23:08:44</inicio><fim>2020-08-16T23:09:34</fim><maquina>3</maquina><operador>Luiza</operador><eixo>Nao encontrado</eixo><meta>10</meta><qtd>10</qtd><rolosad>278</rolosad><rolocad>44</rolocad></producao><producao id="3"><lote>FP50/20</lote><op>50</op><inicio>2020-08-22T15:13:22</inicio><fim>2020-08-22T15:13:26</fim><maquina>3</maquina><operador>Lucas</operador><eixo>Eixo 2</eixo><meta>7667</meta><qtd>1</qtd><rolosad>3500</rolosad><rolocad>3450</rolocad></producao><producao id="4"><lote>FP90/20</lote><op>50</op><inicio>2020-08-22T15:17:45</inicio><fim>2020-08-22T15:17:45</fim><maquina>3</maquina><operador>Lucas</operador><eixo>Nao encontrado</eixo><meta>550</meta><qtd>0</qtd><rolosad>3500</rolosad><rolocad>3450</rolocad></producao></producoesM3>
+</producoes>
