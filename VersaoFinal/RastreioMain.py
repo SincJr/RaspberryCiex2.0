@@ -1009,7 +1009,14 @@ while flagVazio:
     try:     
         xmlConf = ET.parse(arq_config)
         raiz = xmlConf.getroot()
-    
+
+        try:
+            print('esse')
+            ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+            nextion.Enviar("tIP", ip)
+        except:
+            nextion.Enviar("tIP", "Conectando à Internet")
+
         start = datetime.now()
         
         while datetime.now() - start < timedelta(seconds=0.5):
