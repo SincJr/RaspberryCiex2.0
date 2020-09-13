@@ -8,7 +8,7 @@ import time
 import serial
 from datetime import datetime, timedelta
 import struct
-from math import ceil
+from math import ceil, floor
 import subprocess
 import netifaces
 import RPi.GPIO as GPIO
@@ -701,7 +701,11 @@ def logicaPrincipal(tela, entrando, mensagem):   #
     global inicioProd
     global qtdAntiga
              #aqui se poe os comandos que vao rodar quando ENTRAR na pagina
-    rtc.telaAtual = -1
+    try:
+        rtc.telaAtual = -1
+    except NameError as e:
+        print(e)
+        return
     
     print('logica principal ' + str(tela) + ' = ' + str(mensagem))
     
@@ -877,7 +881,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                 nextion.Enviar('tMeta', metaCalculada)
             
         else:
-            dictXmlProd['meta'] = mensagem - qtdAntiga
+            dictXmlProd['meta'] = str(int(mensagem) - qtdAntiga)
            
     if tela is T_PRODUZINDO:
         configurando = False
@@ -1022,7 +1026,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             else:
                 nextion.Enviar("tRolo", xml.PegarRolo(dictXmlProd['eixo']))
 
-            progresso =  str((int(dictXmlProd['qtd']) * 100)/int(dictXmlProd['meta'])) + '%'
+            progresso =  str(int((int(dictXmlProd['qtd']) * 100)/int(dictXmlProd['meta']))) + '%'
             nextion.Enviar("tMeta", progresso)
 
 
@@ -1049,6 +1053,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                 dictXmlParada['lote'] = dictXmlProd['lote']
                 dictXmlParada['op'] = dictXmlProd['op']
                 dictXmlParada['operador'] = dictXmlProd['operador']
+                rolo = xml.PegarRolo(dictXmlProd['eixo'])
 
             else:
                 dictXmlProd = {'lote':'', 'op':'', 'inicio':'', 'fim':'', 'maquina':str(MAQUINA), 'operador':'', 'eixo':'', 'meta':'', 'qtd':'0', 'rolosad':'', 'rolocad':''}
