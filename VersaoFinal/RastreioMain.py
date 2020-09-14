@@ -383,7 +383,7 @@ class MexerXml():
             for eixos in xmlRoot.findall('./eixos/eixo'):
                 eixoPego = eixos.find('./nome')
                 if eixoAntigo == eixoPego.text:
-                    roloAntigo = eixoPego.find('./rolos/rolo/nome').text
+                    roloAntigo = eixos.find('./rolos/rolo/nome').text
         except:
             roloAntigo = 'Nao encontrado'
 
