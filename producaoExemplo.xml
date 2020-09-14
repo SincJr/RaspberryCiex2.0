@@ -1,6 +1,6 @@
 <producoes>
 <producoesM1>
-</producoesM1>
+<producao id="1"><lote>FP49/20</lote><op>45</op><inicio>2020-08-22T18:56:10</inicio><fim>2020-08-22T18:56:48</fim><maquina>1</maquina><operador>Lucas</operador><eixo>Nao encontrado</eixo><meta>4</meta><qtd>4</qtd><rolosad>3500</rolosad><rolocad>3450</rolocad></producao></producoesM1>
 <producoesM2>
 </producoesM2>
 <producoesM3>

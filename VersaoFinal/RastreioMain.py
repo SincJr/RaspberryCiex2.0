@@ -383,8 +383,9 @@ class MexerXml():
             for eixos in xmlRoot.findall('./eixos/eixo'):
                 eixoPego = eixos.find('./nome')
                 if eixoAntigo == eixoPego.text:
-                    roloAntigo = eixoPego.find('./rolos/rolo/nome').text
-        except:
+                    roloAntigo = eixos.find('./rolos/rolo/nome').text
+        except Exception as e:
+            print(e)
             roloAntigo = 'Nao encontrado'
 
         return roloAntigo
@@ -1020,6 +1021,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             dataAntiga = datetime.fromisoformat(dictXmlProd['inicio'])
             dataAntiga = dataAntiga.strftime('%d/%m/%Y') 
             nextion.Enviar("tData", dataAntiga)
+            print(dictXmlProd['eixo'])
             nextion.Enviar("tLote", dictXmlProd['lote'])
             if dictXmlProd['eixo'] == 'Nao encontrado':
                 nextion.Enviar("tRolo","Não encontrado")
@@ -1028,7 +1030,6 @@ def logicaPrincipal(tela, entrando, mensagem):   #
 
             progresso =  str(int((int(dictXmlProd['qtd']) * 100)/int(dictXmlProd['meta']))) + '%'
             nextion.Enviar("tMeta", progresso)
-
 
         else:
             if mensagem is SIM:
