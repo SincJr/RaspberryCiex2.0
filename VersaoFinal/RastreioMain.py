@@ -105,6 +105,9 @@ qtdAntiga = 0
 
 inicioProd = True
 inicioParada = False
+prodInParada = False
+tavaAfk = False
+wait = False
 
 timerAFK = False
 #
@@ -147,13 +150,47 @@ class Server(Thread): #
                         print("ECHO " + str(tipo))
                         if tipo == 'c' or tipo == 'p':  # c = config (ou seja, receber info de maquina), p = prod/paradas (ou seja, enviar xmls)
                             print('masss')
-                            client.send(btipo)     # echo
                             if tipo == 'c':
+                                client.send(btipo)     # echo
                                 stream = client.recv(1024000)
                                 root = ET.fromstring(stream)
                                 with open(arq_config,'w') as arq:
                                     arq.write(ET.tostring(root).decode())
                                 flagVazio = False
+
+                            if tipo == 't':
+                                xmlStream = ET.parse(arq_parada)
+                                xmlRoot = xmlStream.getroot()
+
+                                paradao = xmlRoot.find('./paradasM'+str(MAQUINA))
+                                todasParadas = [p for p in xmlRoot.findall('./paradasM'+str(MAQUINA)+'/parada')]
+                                ultima = todasParadas[-1]
+                                
+                                for paradinha in todasParadas:
+                                    if paradinha == ultima:
+                                        break
+                                    else:
+                                        paradao.remove(paradinha)
+
+                                print('To no T')
+                                xmlStream.write(arq_parada)
+                                xmlStream = ET.parse(arq_prod)
+                                xmlRoot = xmlStream.getroot()
+
+                                prodzao = xmlRoot.find('./producoesM'+str(MAQUINA))
+                                todasProds = [p for p in xmlRoot.findall('./producoesM'+str(MAQUINA)+'/producao')]
+                                ultima = todasProds[-1]
+
+
+                                for prodzinha in todasProds:
+                                    if prodzinha == ultima:
+                                        break
+                                    else:
+                                        prodzao.remove(prodzinha)
+
+
+                                xmlStream.write(arq_prod)
+                                
                             else:
                                 print('entrou')
                                 reatualizarParada = False
@@ -176,23 +213,40 @@ class Server(Thread): #
                                     dictXmlParada['duracao'] = ''
                                     reatualizarParada = True
 
+                                tamanhoPacotes = 1024
 
+                                client.send(b's')
                                 xmlStream = ET.parse(arq_parada)
                                 xmlstr = ET.tostring(xmlStream.getroot()).decode()
-                                client.send(bytes(xmlstr, "utf-8"))
-                                
+                                embytes = struct.pack("<i", len(xmlstr))
+                                print(len(xmlstr))
+                                client.send(embytes)
+                                xmlB = bytes(xmlstr, "utf-8")
+                                pacotes = [xmlB[i:i+1024] for i in range(0, len(xmlstr), 1024)]
+                                for pacote in pacotes:
+                                    client.send(bytes(pacote))
+                                        
+                                        
                                 print("POXA :/")
+                                client.send(b'o')
                                 xmlStream = ET.parse(arq_prod)
                                 xmlstr = ET.tostring(xmlStream.getroot()).decode()
-                                client.send(bytes(xmlstr, "utf-8"))
-                                print('saiu, finalmente')
+                                embytes = struct.pack("<i", len(xmlstr))
+                                print(len(xmlstr))
+                                client.send(embytes)
+                                xmlB = bytes(xmlstr, "utf-8")
+                                pacotes = [xmlB[i:i+1024] for i in range(0, len(xmlstr), 1024)]
+                                for pacote in pacotes:
+                                    client.send(bytes(pacote))
+                                print('deu?')
+
                                 xml.SalvarAlteracoes(reatualizarProd, reatualizarParada)
                                 
                         else:
                             print('Erro!')
                 except:
                     pass
-                
+
 
 class Clock(Thread): #
     
@@ -221,6 +275,11 @@ class Clock(Thread): #
                     
                     if self.telaAtual is T_PRODUZINDO and not nextion.atualizando:
                         nextion.Atualizar(True, True)
+
+                    if self.telaAtual is T_PARADAS and prodInParada:
+                        xml.SalvarAlteracoes(True, True)
+                        nextion.Enviar('page pProducao', False, False)
+
                         
                 if self.telaAtual is T_PRODUZINDO and not nextion.atualizando:
                         nextion.Atualizar(False, False)
@@ -268,7 +327,9 @@ class DetectaAFK(Thread):
 
     def run(self):
         global produzindo
+        global wait
         global timerAFK
+        global tavaAfk
         tempoAFK = 40
         while True:
             flagAFK = True
@@ -279,10 +340,14 @@ class DetectaAFK(Thread):
                 while datetime.now() - startTempo < timedelta(seconds=tempoAFK):
                     if not timerAFK or not produzindo:
                         timerAFK = True
+                        tavaAfk = False
                         flagAFK = False
                         break
                 if flagAFK:
                     print('aaa deu certo')
+                    wait = True
+                    produzindo = False
+                    tavaAfk = True
                     nextion.Enviar("click tParada,0", False, False) 
 
 
@@ -309,6 +374,7 @@ def FuncInterrupt(porta):
     global parada
     global produzindo
     global timerAFK
+    global prodInParada
     
     print("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
     
@@ -318,21 +384,21 @@ def FuncInterrupt(porta):
         timerAFK = False
         dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat() 
         
-        if produzindo is False:
+        if produzindo is False and wait is False:
             produzindo = True
             parada = False
+            prodInParada = True
 
             dictXmlParada['tipo'] = NAO_INFORMADO
             dictXmlParada['duracao'] = (datetime.now().replace(microsecond=0) - datetime.fromisoformat(dictXmlParada['data'])).total_seconds()
-
-            xml.SalvarAlteracoes(True, True)
-
-            nextion.Enviar('page pProducao', False, False)
+            if tavaAfk:
+                dictXmlParada['duracao'] = str(int(dictXmlParada['duracao']) + 40)
 
 
 def progressoMeta():
+    global qtdRolos
     global producao
-    return int(((producao + qtdAntiga) * 100)/(int(dictXmlProd['meta']) + qtdAntiga))
+    return int(((producao + qtdAntiga)*qtdRolos*100)/(int(dictXmlProd['meta']) + qtdAntiga*qtdRolos))
 
 
 def calcularMeta():
@@ -647,6 +713,8 @@ class Nextion(Thread): #
 
     def Atualizar(self, menosInfo, progresso):
         global bateu
+        global producao
+        global qtdAntiga
         
         if not menosInfo:
             telinhaTemp = rtc.telaAtual
@@ -672,7 +740,7 @@ class Nextion(Thread): #
         
         if progresso:
             prog = progressoMeta()
-            nextion.Enviar("tProgresso", str(prog) + '%')
+            nextion.Enviar("tProgresso", str(producao + qtdAntiga))
             if prog > 100:
                 nextion.Enviar('tBarra.val=', str(100), False)
             else:
@@ -698,6 +766,7 @@ class Nextion(Thread): #
         
 def logicaPrincipal(tela, entrando, mensagem):   #
     global configurando
+    global produzindo
     global dictXmlProd
     global inicioProd
     global qtdAntiga
@@ -886,7 +955,6 @@ def logicaPrincipal(tela, entrando, mensagem):   #
            
     if tela is T_PRODUZINDO:
         configurando = False
-        global produzindo
         global parada
         print('Foiiii')
         if entrando:
@@ -914,10 +982,12 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         configurando = False
         global inicioParada
         global conjuntoParadas
+        global wait
         global dictParadas
         linhas = 4
         print("PARADA" + str(mensagem))
         if entrando:
+            wait = True
             produzindo = False
             xml.GerarNovaParada()
             dictXmlParada['data'] = datetime.now().replace(microsecond=0).isoformat()
@@ -946,6 +1016,8 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                   
             if colunas > 1:
                 nextion.Enviar("vis bR,1", False, False)
+            
+            wait = False
                 
         else:
             if mensagem == '>' or mensagem == '<':
@@ -985,6 +1057,8 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             pass
         else:
             dictXmlParada['duracao'] = str(round((datetime.now().replace(microsecond=0) - datetime.fromisoformat(dictXmlParada['data'])).total_seconds()))
+            if tavaAfk:
+                dictXmlParada['duracao'] = str(int(dictXmlParada['duracao']) + 40)
             xml.SalvarAlteracoes(False, True)
             pass
 
