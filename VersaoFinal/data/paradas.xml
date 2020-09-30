@@ -1,7 +1,6 @@
 <paradas>
 <paradasM1>
-</paradasM1>
-<paradasM2>
+<parada id="1"><data>2020-09-15T11:44:01</data><lote>FP400/20</lote><op>10</op><tipo>Perdas Em Processo </tipo><maquina>1</maquina><operador>Isaias</operador><duracao>21</duracao></parada><parada id="2"><data>2020-09-17T11:52:26</data><lote>FP404/20</lote><op>10</op><tipo>Perdas Em Processo </tipo><maquina>1</maquina><operador>Fernando</operador><duracao>9</duracao></parada><parada id="3"><data>2020-09-17T11:56:30</data><lote>FP404/20</lote><op>10</op><tipo>Nao informada</tipo><maquina>1</maquina><operador>Fernando</operador><duracao>36.0</duracao></parada><parada id="4"><data>2020-09-17T12:11:13</data><lote>FP404/20</lote><op>10</op><tipo>Carregamento</tipo><maquina>1</maquina><operador>Fernando</operador><duracao>9</duracao></parada><parada id="5"><data>2020-09-17T12:14:11</data><lote>FP404/20</lote><op>10</op><tipo>Nao informada</tipo><maquina>1</maquina><operador>Fernando</operador><duracao>1.0</duracao></parada><parada id="6"><data>2020-09-17T12:19:45</data><lote>FP404/20</lote><op>10</op><tipo>Ajuste Em Maquina</tipo><maquina>1</maquina><operador>Fernando</operador><duracao>5</duracao></parada></paradasM1><paradasM2>
 </paradasM2>
 <paradasM3>
 </paradasM3>
