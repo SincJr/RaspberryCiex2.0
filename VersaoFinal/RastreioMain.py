@@ -109,6 +109,7 @@ inicioParada = False
 prodInParada = False
 tavaAfk = False
 wait = False
+irpraparada = False
 
 timerAFK = False
 #
@@ -258,6 +259,8 @@ class Clock(Thread): #
     
     def run(self):
         global prodInParada
+        global irpraparada
+        global tavaAfk
         while True:
             startTempo2min = datetime.now()
             while datetime.now() - startTempo2min < timedelta(minutes=2):
@@ -275,7 +278,11 @@ class Clock(Thread): #
                     
                     if self.telaAtual is T_PRODUZINDO and not nextion.atualizando:
                         nextion.Atualizar(True, True)
-                        
+                    
+                    if irpraparada:
+                        nextion.Enviar("click tParada,0", False, False) 
+                        irpraparada = False
+                    
                     #print('combo: ' + str(self.telaAtual) + ' ... ' + str(prodInParada)) 
                     if (self.telaAtual is T_PARADAS or self.telaAtual is T_VOLTAR) and prodInParada and not wait:
                         nextion.Enviar("page pProducao", False, False)
@@ -283,9 +290,13 @@ class Clock(Thread): #
                         dictXmlParada['duracao'] = (datetime.now().replace(microsecond=0) - datetime.fromisoformat(dictXmlParada['data'])).total_seconds()
                         if tavaAfk:
                             dictXmlParada['duracao'] = str(int(dictXmlParada['duracao']) + 40)
+                            tavaAfk = False
                         xml.SalvarAlteracoes(True, True)
                         prodInParada = False
                         print('B B B')
+                    else:
+                        prodInParada = False
+                
 
                         
                 if self.telaAtual is T_PRODUZINDO and not nextion.atualizando:
@@ -336,6 +347,7 @@ class DetectaAFK(Thread):
         global produzindo
         global wait
         global timerAFK
+        global irpraparada
         global tavaAfk
         tempoAFK = 40
         while True:
@@ -352,10 +364,9 @@ class DetectaAFK(Thread):
                         break
                 if flagAFK:
                     print('aaa deu certo')
-                    #wait = True
-                    #produzindo = False
-                    rtc.telaAtual = -1
-                    nextion.Enviar("click tParada,0", False, False) 
+                    wait = True
+                    irpraparada = True
+                    produzindo = False
                     tavaAfk = True
 
 
@@ -388,11 +399,12 @@ def FuncInterrupt(porta):
 
     inicioCronometro = datetime.now()
 
-    while datetime.now() - inicioCronometro > timedelta(milliseconds=50):
+    while datetime.now() - inicioCronometro < timedelta(milliseconds=50):
         pass
     
-    if GPIO.input(INTERRUPT_PIN) != GPIO.HIGH:
+    if GPIO.input(INTERRUPT_PIN) != GPIO.LOW:
         return
+    print('pos-timer')
     
     if not configurando:
         producao += 1
@@ -783,6 +795,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
     global configurando
     global produzindo
     global dictXmlProd
+    global tavaAfk
     global inicioProd
     global qtdAntiga
     global metaAntiga
@@ -1036,7 +1049,8 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             if colunas > 1:
                 nextion.Enviar("vis bR,1", False, False)
         
-                
+            
+            wait = False
         else:
             if mensagem == '>' or mensagem == '<':
                 colunaAtual = colunaAtual + 1 if mensagem == '>' else colunaAtual - 1
@@ -1067,8 +1081,10 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                 dictXmlParada['tipo'] = tipoParada
                 print(dictXmlParada['tipo'])
                 xml.SalvarAlteracoes(False, True)
-                        
-        wait = False
+        
+        #tolerancia = datetime.now()
+        #while datetime.now() - tolerancia < timedelta(seconds=5):
+        #    pass
         
             
     if tela is T_VOLTAR:
@@ -1082,6 +1098,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             dictXmlParada['duracao'] = str(round((datetime.now().replace(microsecond=0) - datetime.fromisoformat(dictXmlParada['data'])).total_seconds()))
             if tavaAfk:
                 dictXmlParada['duracao'] = str(int(dictXmlParada['duracao']) + 40)
+                tavaAfk = False
             xml.SalvarAlteracoes(False, True)
             pass
         wait = False
