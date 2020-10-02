@@ -216,27 +216,25 @@ class Server(Thread): #
 
                                 tamanhoPacotes = 1024
 
-                                client.send(b's')
                                 xmlStream = ET.parse(arq_parada)
                                 xmlstr = ET.tostring(xmlStream.getroot()).decode()
                                 embytes = struct.pack("<i", len(xmlstr))
                                 print(len(xmlstr))
                                 client.send(embytes)
                                 xmlB = bytes(xmlstr, "utf-8")
-                                pacotes = [xmlB[i:i+1024] for i in range(0, len(xmlstr), 1024)]
+                                pacotes = [xmlB[i:i+tamanhoPacotes] for i in range(0, len(xmlstr), tamanhoPacotes)]
                                 for pacote in pacotes:
                                     client.send(bytes(pacote))
                                         
                                         
                                 print("POXA :/")
-                                client.send(b'o')
                                 xmlStream = ET.parse(arq_prod)
                                 xmlstr = ET.tostring(xmlStream.getroot()).decode()
                                 embytes = struct.pack("<i", len(xmlstr))
                                 print(len(xmlstr))
                                 client.send(embytes)
                                 xmlB = bytes(xmlstr, "utf-8")
-                                pacotes = [xmlB[i:i+1024] for i in range(0, len(xmlstr), 1024)]
+                                pacotes = [xmlB[i:i+tamanhoPacotes] for i in range(0, len(xmlstr), tamanhoPacotes)]
                                 for pacote in pacotes:
                                     client.send(bytes(pacote))
                                 print('deu?')
@@ -387,6 +385,14 @@ def FuncInterrupt(porta):
     global prodInParada
     
     print("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
+
+    inicioCronometro = datetime.now()
+
+    while datetime.now() - inicioCronometro > timedelta(milliseconds=50):
+        pass
+    
+    if GPIO.input(INTERRUPT_PIN) != GPIO.HIGH:
+        return
     
     if not configurando:
         producao += 1
