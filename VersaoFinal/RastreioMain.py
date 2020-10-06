@@ -1,3 +1,26 @@
+#####################################################################################
+#
+# Projeto: Rastreio de Produtividade 2.0
+# Contratante: Ciex do Brasil
+# Contratada: Sinc Júnior
+#
+# Equipe do projeto:
+# Jonathan Brown 
+# Luiza Dexheimer
+# Vinicius Lima 
+#
+#
+# Este código tem por função:
+# - Importar de um software desktop, também desenvolvido pela Sinc Júnior, dados de configuração da máquina produtora de carreteis de fita microporosa.
+# - Expor os dados de configuração previamente importados em interface gráfica conectada ao dispositivo, permitindo manipulação por usuário.
+# - Registrar produção e paradas de uma máquina produtora de carreteis de fita microporosa.
+# - Coletar e registrar informações de produção obtidas por interface gráfica conectada ao dispositivo.
+# - Exportar os dados registrados para um software desktop, também desenvolvido pela Sinc Júnior.
+#
+#
+# Código inteiramente elaborado e desenvolvido pela Sinc Júnior.
+#####################################################################################
+
 import socket
 import os
 import sys
