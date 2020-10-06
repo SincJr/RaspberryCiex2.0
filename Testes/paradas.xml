@@ -1,6 +1,6 @@
 <paradas>
 <paradasM1>
-</paradasM1>
+<parada id="1"><data>2020-08-22T18:56:39</data><lote>FP49/20</lote><op>45</op><tipo>Almoco</tipo><maquina>1</maquina><operador>Lucas</operador><duracao>4</duracao></parada><parada id="2"><data>2020-08-22T18:56:46</data><lote>FP49/20</lote><op>45</op><tipo>Nao informada</tipo><maquina>1</maquina><operador>Lucas</operador><duracao>2.0</duracao></parada></paradasM1>
 <paradasM2>
 </paradasM2>
 <paradasM3>
