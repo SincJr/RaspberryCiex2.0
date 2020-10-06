@@ -1,0 +1,8 @@
+<producoes>
+<producoesM1>
+<producao id="1"><lote>FP400/20</lote><op>10</op><inicio>2020-09-15T11:43:15</inicio><fim>2020-09-15T13:41:23</fim><maquina>1</maquina><operador>Isaias</operador><eixo>25x10</eixo><meta>10</meta><qtd>0</qtd><rolosad>3500</rolosad><rolocad>3450</rolocad></producao><producao id="2"><lote>FP404/20</lote><op>10</op><inicio>2020-09-17T11:33:47</inicio><fim>2020-09-17T11:36:11</fim><maquina>1</maquina><operador>Fernando</operador><eixo>25x10</eixo><meta>11800</meta><qtd>19</qtd><rolosad>3500</rolosad><rolocad>2950</rolocad></producao><producao id="3"><lote>FP404/20</lote><op>10</op><inicio>2020-09-17T11:37:20</inicio><fim>2020-09-17T11:57:06</fim><maquina>1</maquina><operador>Fernando</operador><eixo>25x10</eixo><meta>11781</meta><qtd>76</qtd><rolosad>3500</rolosad><rolocad>2950</rolocad></producao><producao id="4"><lote>FP404/20</lote><op>10</op><inicio>2020-09-17T12:02:50</inicio><fim>2020-09-17T16:39:49</fim><maquina>1</maquina><operador>Fernando</operador><eixo>25x10</eixo><meta>11705</meta><qtd>787</qtd><rolosad>3500</rolosad><rolocad>2950</rolocad></producao><producao id="5"><lote>FP404/20</lote><op>10</op><inicio>2020-09-17T16:41:11</inicio><fim>2020-09-17T16:51:29</fim><maquina>1</maquina><operador>Fernando</operador><eixo>25x10</eixo><meta>10918</meta><qtd>36</qtd><rolosad>3500</rolosad><rolocad>2950</rolocad></producao><producao id="6"><lote>FP408/20</lote><op>10</op><inicio>2020-09-19T09:49:45</inicio><fim>2020-09-21T09:41:54</fim><maquina>1</maquina><operador>Fernando</operador><eixo>25x10</eixo><meta>10882</meta><qtd>252</qtd><rolosad>3500</rolosad><rolocad>2950</rolocad></producao></producoesM1>
+<producoesM2>
+</producoesM2>
+<producoesM3>
+</producoesM3>
+</producoes>
