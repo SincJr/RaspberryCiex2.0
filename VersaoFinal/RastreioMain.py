@@ -150,7 +150,7 @@ class Server(Thread): #
                         btipo = client.recv(1)
                         tipo = btipo.decode("utf-8")
                         print("ECHO " + str(tipo))
-                        if tipo == 'c' or tipo == 'p':  # c = config (ou seja, receber info de maquina), p = prod/paradas (ou seja, enviar xmls)
+                        if tipo == 'c' or tipo == 'p' or tipo == 't':  # c = config (ou seja, receber info de maquina), p = prod/paradas (ou seja, enviar xmls)
                             print('masss')
                             if tipo == 'c':
                                 client.send(btipo)     # echo
@@ -197,6 +197,7 @@ class Server(Thread): #
                                 print('entrou')
                                 reatualizarParada = False
                                 reatualizarProd = False
+                                
                                 if dictXmlProd['fim'] == '' and idProd:
                                     dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat()
                                     xml.SalvarAlteracoes(True, False)
