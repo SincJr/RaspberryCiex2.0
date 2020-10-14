@@ -109,8 +109,12 @@ meta = ''
 rolo = ''
 qtdRolos = 0
 
-rolos = {0:' ', 1:' ', 2:' ', 3:' '}
- 
+if MAQUINA is 1:
+    rolos = {0:'25x10', 1:'25x0,9', 2:'25x4,5'} 
+elif MAQUINA is 2:
+    rolos = {0:'50x10', 1:'50x4,5'}
+elif MAQUINA is 3:
+    rolos = {0:'100x10', 1:'100x4,5', 2:'12x10', 3:'12x4,5'} 
 dictXmlProd = {'lote':'', 'op':'', 'inicio':'', 'fim':'', 'maquina':str(MAQUINA), 'operador':'', 'eixo':'', 'meta':'', 'qtd':'0', 'rolosad':'', 'rolocad':''}
 dictXmlParada = {'data':'', 'lote':'', 'op':'', 'tipo':NAO_INFORMADO, 'maquina':str(MAQUINA), 'operador':'', 'duracao':'40'}
 
@@ -610,6 +614,7 @@ class Nextion(Thread): #
     atualizando = False
     
     def __init__(self):
+        global rolo
         Thread.__init__(self)
         self.daemon = True
         self.start()
@@ -1224,45 +1229,17 @@ def RetomarProducao():
     else:
         inacabada = False 
 
-def IniciarRolos():
-    xmlC = ET.parse(arq_config)
-    xmlC = xmlC.getroot()
-    
-    i = 0
-    try:
-        for diferente in xmlC.findall('./eixos/eixo/rolos/rolo/nome'):
-            comp, _ = diferente.text.split('x')
-            if MAQUINA is 1:
-                if comp == '25':
-                    rolos[i] = diferente.text
-                    print(diferente.text)
-                    i-=-1
-            if MAQUINA is 2:
-                if comp == '50':
-                    rolos[i] = diferente.text
-                    print(diferente.text)
-                    i-=-1
-            if MAQUINA is 3:
-                if comp == '100':
-                    rolos[i] = diferente.text
-                    print(diferente.text)
-                    i-=-1
-                if comp == '12':
-                    rolos[i] = diferente.text
-                    print(diferente.text)
-                    i-=-1
-    except Exception as e:
-        print(e)
-    
+
 nextion = Nextion()
 Server()
+
 nextion.Enviar("dim=100", False, False)
 
 while flagVazio: 
-    try:    
+    try:     
         xmlConf = ET.parse(arq_config)
         raiz = xmlConf.getroot()
-        
+    
         try:
             print('esse')
             ip = netifaces.ifaddresses('eth0')[2][0]['addr']
@@ -1285,7 +1262,7 @@ while flagVazio:
             flagVazio = False
             break
         print('loop')
-        
+    
         nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
         nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
     except:
@@ -1293,8 +1270,6 @@ while flagVazio:
         nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
 
 
-IniciarRolos()
-print('b')
 xml = MexerXml()
 rtc = Clock()
 DetectaAFK()
