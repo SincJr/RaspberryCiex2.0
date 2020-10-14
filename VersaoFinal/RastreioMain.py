@@ -63,7 +63,9 @@ T_RETOMAR = 15
 INTERRUPT_PIN = 27
 
 PORTA_BASE_PADRAO = 32000
+
 MAQUINA = 3
+
 PORT = PORTA_BASE_PADRAO + MAQUINA
 
 SIM = 69
@@ -272,7 +274,7 @@ class Server(Thread): #
                     pass
 
 
-class Clock(Thread): #
+class Clock(Thread): 
     
     telaAtual = 0
     
@@ -305,6 +307,7 @@ class Clock(Thread): #
                     
                     if irpraparada:
                         nextion.Enviar("click tParada,0", False, False) 
+                        print('ueee')
                         irpraparada = False
                     
                     #print('combo: ' + str(self.telaAtual) + ' ... ' + str(prodInParada)) 
@@ -464,6 +467,41 @@ def calcularMeta():
 
 
 class MexerXml():
+    def __init__(self):
+        global arq_config
+        xmlC = ET.parse(arq_config)
+        xmlConfig = xmlC.getroot()
+        
+        mudouAlgo = False
+        
+        for eixoxml in xmlConfig.findall('./eixos/eixo'):
+            eixonome = eixoxml.find('./nome')
+            rolonome = eixoxml.find('./rolos/rolo/nome')
+            eixoEsquerda, eixoDireita = eixonome.text.split('x')
+            roloEsquerda, roloDireita = rolonome.text.split('x')
+            
+            if eixoDireita == '45':
+                print('to no 45 E')
+                eixonome.text = eixoEsquerda  + 'x' + '4,5'
+                mudouAlgo = True
+            elif eixoDireita == '09':
+                print('to no 09 E')
+                eixonome.text = eixoEsquerda  + 'x' + '0,9'
+                mudouAlgo = True
+                
+            if roloDireita == '45':
+                print('to no 45 R')
+                rolonome.text = roloEsquerda  + 'x' + '4,5'
+                mudouAlgo = True
+            elif roloDireita == '09':
+                print('to no 09 R')
+                rolonome.text = roloEsquerda  + 'x' + '0,9'
+                mudouAlgo = True
+                
+            if mudouAlgo:
+                xmlC.write(arq_config)
+            
+    
     def PegarEixo(self, rolo):
         global arq_config
         global qtdRolos
@@ -779,8 +817,10 @@ class Nextion(Thread): #
 
             try:
                 ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+                print('misterio1')
                 nextion.Enviar("tIP", ip)
             except:
+                print('misterio')
                 nextion.Enviar("tIP", "Conectando à Internet")
             
             if bateu:
@@ -801,6 +841,9 @@ class Nextion(Thread): #
         nextion.Enviar("tData", '/'.join(rtc.pegarData()))
         
     def Enviar(self, varNextion, msgEnviar, texto = True): #
+
+        print('para: ' + str(varNextion) + '  enviando: ' + str(msgEnviar))
+
         varNextion = bytes(varNextion, encoding='iso-8859-1')
         ser.write(varNextion)
 
@@ -976,10 +1019,6 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                         nextion.Enviar("tO" + str(lin), " ")
                     else:
                         nextion.Enviar("tO"+str(lin), nome)
-
-                
-                
-                
                 
             else:
                 escolha = mensagem + colunaAtual*4
