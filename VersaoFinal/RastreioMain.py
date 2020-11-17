@@ -27,6 +27,8 @@ import sys
 import xml.dom.minidom as minidom
 import xml.etree.ElementTree as ET
 from threading import Thread
+import psutil
+import threading
 import time
 import serial
 from datetime import datetime, timedelta
@@ -135,7 +137,7 @@ prodInParada = False
 tavaAfk = False
 wait = False
 irpraparada = False
-
+podeDormir = True
 timerAFK = False
 #
 #Variaveis dos arquivos xml
@@ -150,17 +152,19 @@ arq_parada = os.path.abspath(os.path.join(full_file, file_paradas))
 arq_prod = os.path.abspath(os.path.join(full_file, file_prod))
 
 print(arq_config)
-
+print(os.getpid())
 
 class Server(Thread): #
     def __init__(self):
         Thread.__init__(self)
         self.daemon = True
-        self.start()
+        self.start()  
+        print(Thread.getName(self) + ' Server')
         
     def run(self):
         global flagVazio
         while True:
+            sleep(0.01)
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR, 1 )
                 try:
@@ -282,7 +286,8 @@ class Clock(Thread):
         Thread.__init__(self)
         self.daemon = True
         self.start()
-    
+        print(Thread.getName(self) + 'Clock')
+        
     def run(self):
         global prodInParada
         global irpraparada
@@ -296,7 +301,8 @@ class Clock(Thread):
                 while datetime.now() - startTempo5s < timedelta(seconds=5):
                     
                     startTempo = datetime.now()
-                    while datetime.now() - startTempo < timedelta(seconds=.5):
+                    while datetime.now() - startTempo < timedelta(seconds=.3):
+                        sleep(0.01)
                         pass
 
                     if self.telaAtual is T_DATAHORA and not nextion.atualizando:
@@ -369,7 +375,8 @@ class DetectaAFK(Thread):
         Thread.__init__(self)
         self.daemon = True
         self.start()
-
+        print(Thread.getName(self) + 'AFK')
+        
     def run(self):
         global produzindo
         global wait
@@ -378,12 +385,14 @@ class DetectaAFK(Thread):
         global tavaAfk
         tempoAFK = 40
         while True:
+            sleep(0.01)
             flagAFK = True
             timerAFK = True
             if produzindo:
                 startTempo = datetime.now()
                 print('oio')
                 while datetime.now() - startTempo < timedelta(seconds=tempoAFK):
+                    sleep(0.01)
                     if not timerAFK or not produzindo:
                         timerAFK = True
                         tavaAfk = False
@@ -402,11 +411,13 @@ class BateuMeta(Thread):
         Thread.__init__(self)
         self.daemon = True
         self.start()
-
+        print(Thread.getName(self) + 'BateuMeta')
+        
     def run(self):
         global produzindo
         global bateu
         while True:
+            sleep(0.01)
             if produzindo:
                 if int(dictXmlProd['meta']) <= int(dictXmlProd['qtd']) and not bateu and produzindo and not nextion.atualizando and int(dictXmlProd['qtd']) >= 1:
                     dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat()
@@ -427,6 +438,7 @@ def FuncInterrupt(porta):
     inicioCronometro = datetime.now()
 
     while datetime.now() - inicioCronometro < timedelta(milliseconds=50):
+        sleep(0.01)
         pass
     
     if GPIO.input(INTERRUPT_PIN) != GPIO.LOW:
@@ -656,11 +668,14 @@ class Nextion(Thread): #
         Thread.__init__(self)
         self.daemon = True
         self.start()
-
+        print(Thread.getName(self) + 'Nextion')
+        
     def run(self):
         sair = False
-
+        global podeDormir
         while True:
+            if podeDormir:
+                sleep(0.01)
             flagRecebeu = False
             temMensagem = False
             botaoApertado = False
@@ -676,6 +691,7 @@ class Nextion(Thread): #
             msg = ser.read()
             #print('.')
             while msg:
+                podeDormir = False
                 msg = msg.decode('iso-8859-1')
                 print(msg)
                 self.atualizando = True
@@ -783,6 +799,7 @@ class Nextion(Thread): #
 
                     
                 msg = ser.read()
+                podeDormir = True
     
                 
             self.atualizando = False
@@ -799,6 +816,7 @@ class Nextion(Thread): #
 
             if sinalTela is not -1:
                 logicaPrincipal(sinalTela, True, False)
+        
 
     def Atualizar(self, menosInfo, progresso):
         global bateu
@@ -842,7 +860,7 @@ class Nextion(Thread): #
         
     def Enviar(self, varNextion, msgEnviar, texto = True): #
 
-        print('para: ' + str(varNextion) + '  enviando: ' + str(msgEnviar))
+        #print('para: ' + str(varNextion) + '  enviando: ' + str(msgEnviar))
 
         varNextion = bytes(varNextion, encoding='iso-8859-1')
         ser.write(varNextion)
@@ -1289,6 +1307,7 @@ while flagVazio:
         start = datetime.now()
         
         while datetime.now() - start < timedelta(seconds=0.5):
+            sleep(0.01)
             pass
     
         for pessoa in raiz.findall('./operadores/operador'):
@@ -1321,6 +1340,7 @@ RetomarProducao()
 logicaPrincipal(T_INICIAL, True, False)
 
 while True:
+    #sleep(0.000000010)
     pass
                     
             
