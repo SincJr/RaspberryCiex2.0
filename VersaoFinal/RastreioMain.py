@@ -79,11 +79,11 @@ NAO_INFORMADO = "Nao informada"
 #
 ser = serial.Serial(
     port='/dev/ttyS0',
-    baudrate=19200,           
+    baudrate=57600,
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
-    timeout=0.00 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
+    timeout=0.15 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
     )
     
 ff = struct.pack('B', 0xff)
@@ -168,7 +168,8 @@ class Server(Thread): #
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR, 1 )
                 try:
-                    HOST = netifaces.ifaddresses('eth0')[2][0]['addr']
+                    #HOST = netifaces.ifaddresses('eth0')[2][0]['addr']
+                    HOST = netifaces.ifaddresses('wlan0')[2][0]['addr']
                     sock.bind((HOST, PORT))
                     sock.listen()
                     print('ouve')
@@ -188,6 +189,9 @@ class Server(Thread): #
                                 with open(arq_config,'w') as arq:
                                     arq.write(ET.tostring(root).decode())
                                 flagVazio = False
+
+                            if tipo == 'f':
+                                xml.reformatar()
 
                             if tipo == 't':
                                 xmlStream = ET.parse(arq_parada)
@@ -657,6 +661,24 @@ class MexerXml():
                 xmlParada = rootParadas.find('./' + tipo)
                 xmlParada.text = str(dictXmlParada[tipo])
             xmlParadas.write(arq_parada)
+
+    def reformatar(self):
+        try:
+            tree = ET.parse(arq_parada)
+        except ET.ParseError:
+            subprocess.Popen(['rm', 'RaspberryCiex2.0/VersaoFinal/data/paradas.xml'])
+            subprocess.Popen(['cp', 'RaspberryCiex2.0/VersaoFinal/dataPadrao/paradas.xml', 'RaspberryCiex2.0/VersaoFinal/data/paradas.xml'])
+
+            pass
+
+        try:
+            tree = ET.parse(arq_prod)
+        except ET.ParseError:
+            # log error
+            subprocess.Popen(['rm', 'RaspberryCiex2.0/VersaoFinal/data/producao.xml'])
+            subprocess.Popen(['cp', 'RaspberryCiex2.0/VersaoFinal/dataPadrao/producao.xml', 'RaspberryCiex2.0/VersaoFinal/data/producao.xml'])
+
+            pass
 
     
 class Nextion(Thread): #
@@ -1299,7 +1321,8 @@ while flagVazio:
     
         try:
             print('esse')
-            ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+            #ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+            ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
             nextion.Enviar("tIP", ip)
         except:
             nextion.Enviar("tIP", "Conectando à Internet")
