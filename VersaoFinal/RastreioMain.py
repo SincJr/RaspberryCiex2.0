@@ -79,11 +79,11 @@ NAO_INFORMADO = "Nao informada"
 #
 ser = serial.Serial(
     port='/dev/ttyS0',
-    baudrate=19200,           
+    baudrate=57600,
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
-    timeout=0.00 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
+    timeout=0.15 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
     )
     
 ff = struct.pack('B', 0xff)
@@ -100,6 +100,7 @@ produzindo = False
 configurando = True
 bateu = False
 flagVazio = True
+flagCheio = True
 inacabada = False
 
 dictOperadores = {}
@@ -168,7 +169,8 @@ class Server(Thread): #
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR, 1 )
                 try:
-                    HOST = netifaces.ifaddresses('eth0')[2][0]['addr']
+                    #HOST = netifaces.ifaddresses('eth0')[2][0]['addr']
+                    HOST = netifaces.ifaddresses('wlan0')[2][0]['addr']
                     sock.bind((HOST, PORT))
                     sock.listen()
                     print('ouve')
@@ -179,7 +181,7 @@ class Server(Thread): #
                         btipo = client.recv(1)
                         tipo = btipo.decode("utf-8")
                         print("ECHO " + str(tipo))
-                        if tipo == 'c' or tipo == 'p' or tipo == 't':  # c = config (ou seja, receber info de maquina), p = prod/paradas (ou seja, enviar xmls)
+                        if tipo == 'c' or tipo == 'p' or tipo == 't' or tipo == 'f':  # c = config (ou seja, receber info de maquina), p = prod/paradas (ou seja, enviar xmls)
                             print('masss')
                             if tipo == 'c':
                                 client.send(btipo)     # echo
@@ -188,6 +190,9 @@ class Server(Thread): #
                                 with open(arq_config,'w') as arq:
                                     arq.write(ET.tostring(root).decode())
                                 flagVazio = False
+
+                            if tipo == 'f':
+                                xml.reformatar()
 
                             if tipo == 't':
                                 xmlStream = ET.parse(arq_parada)
@@ -542,7 +547,7 @@ class MexerXml():
         
         xml = ET.parse(arq_config)
         xmlRoot = xml.getroot()
-        
+        roloAntigo = 'Nao encontrado'
         try:
             for eixos in xmlRoot.findall('./eixos/eixo'):
                 eixoPego = eixos.find('./nome')
@@ -657,6 +662,24 @@ class MexerXml():
                 xmlParada = rootParadas.find('./' + tipo)
                 xmlParada.text = str(dictXmlParada[tipo])
             xmlParadas.write(arq_parada)
+
+    def reformatar(self):
+        try:
+            tree = ET.parse(arq_parada)
+        except ET.ParseError:
+            subprocess.Popen(['rm', 'RaspberryCiex2.0/VersaoFinal/data/paradas.xml'])
+            subprocess.Popen(['cp', 'RaspberryCiex2.0/VersaoFinal/dataPadrao/paradas.xml', 'RaspberryCiex2.0/VersaoFinal/data/paradas.xml'])
+
+            pass
+
+        try:
+            tree = ET.parse(arq_prod)
+        except ET.ParseError:
+            # log error
+            subprocess.Popen(['rm', 'RaspberryCiex2.0/VersaoFinal/data/producao.xml'])
+            subprocess.Popen(['cp', 'RaspberryCiex2.0/VersaoFinal/dataPadrao/producao.xml', 'RaspberryCiex2.0/VersaoFinal/data/producao.xml'])
+
+            pass
 
     
 class Nextion(Thread): #
@@ -1299,7 +1322,8 @@ while flagVazio:
     
         try:
             print('esse')
-            ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+            #ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+            ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
             nextion.Enviar("tIP", ip)
         except:
             nextion.Enviar("tIP", "Conectando à Internet")
@@ -1320,12 +1344,23 @@ while flagVazio:
             flagVazio = False
             break
         print('loop')
-    
+
         nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
         nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
     except:
         nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
         nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
+
+while flagCheio:
+    xmlStream = ET.parse(arq_parada)
+    xmlstr = ET.tostring(xmlStream.getroot()).decode()
+
+    if len(xmlstr) > 57000:
+        nextion.Enviar("tMsg", "Arquivos lotados!")
+        nextion.Enviar("tMsg2", "Limpe o armazenamento ou importe!")
+
+    else:
+        flagCheio = False
 
 
 xml = MexerXml()
