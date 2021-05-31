@@ -169,8 +169,8 @@ class Server(Thread): #
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR, 1 )
                 try:
-                    #HOST = netifaces.ifaddresses('eth0')[2][0]['addr']
-                    HOST = netifaces.ifaddresses('wlan0')[2][0]['addr']
+                    HOST = netifaces.ifaddresses('eth0')[2][0]['addr']
+                    #HOST = netifaces.ifaddresses('wlan0')[2][0]['addr']
                     sock.bind((HOST, PORT))
                     sock.listen()
                     print('ouve')
@@ -1322,8 +1322,8 @@ while flagVazio:
     
         try:
             print('esse')
-            #ip = netifaces.ifaddresses('eth0')[2][0]['addr']
-            ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
+            ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+            #ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
             nextion.Enviar("tIP", ip)
         except:
             nextion.Enviar("tIP", "Conectando à Internet")
