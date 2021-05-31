@@ -100,6 +100,7 @@ produzindo = False
 configurando = True
 bateu = False
 flagVazio = True
+flagCheio = True
 inacabada = False
 
 dictOperadores = {}
@@ -546,7 +547,7 @@ class MexerXml():
         
         xml = ET.parse(arq_config)
         xmlRoot = xml.getroot()
-        
+        roloAntigo = 'Nao encontrado'
         try:
             for eixos in xmlRoot.findall('./eixos/eixo'):
                 eixoPego = eixos.find('./nome')
@@ -1343,12 +1344,23 @@ while flagVazio:
             flagVazio = False
             break
         print('loop')
-    
+
         nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
         nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
     except:
         nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
         nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
+
+while flagCheio:
+    xmlStream = ET.parse(arq_parada)
+    xmlstr = ET.tostring(xmlStream.getroot()).decode()
+
+    if len(xmlstr) > 57000:
+        nextion.Enviar("tMsg", "Arquivos lotados!")
+        nextion.Enviar("tMsg2", "Limpe o armazenamento ou importe!")
+
+    else:
+        flagCheio = False
 
 
 xml = MexerXml()
