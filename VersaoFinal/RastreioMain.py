@@ -101,6 +101,7 @@ configurando = True
 bateu = False
 flagVazio = True
 flagCheio = True
+flagCorrompido = True
 inacabada = False
 
 dictOperadores = {}
@@ -1311,6 +1312,7 @@ def RetomarProducao():
 
 
 nextion = Nextion()
+xml = MexerXml()
 Server()
 
 nextion.Enviar("dim=100", False, False)
@@ -1351,6 +1353,27 @@ while flagVazio:
         nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
         nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
 
+while flagCorrompido:
+    try:
+        flagCorrompido = True
+        xmlStream = ET.parse(arq_parada)
+        xmlraiz = xmlStream.getroot()
+        flagCorrompido = False
+    except Exception as e:
+        nextion.Enviar("tMsg", "Arquivos corrompidos!")
+        nextion.Enviar("tMsg2", "Reformate utilizando o computador!")
+
+
+    try:
+        flagCorrompido = True
+        xmlStream = ET.parse(arq_prod)
+        xmlraiz= xmlStream.getroot()
+        flagCorrompido = False
+    except Exception as e:
+        # log error
+        nextion.Enviar("tMsg", "Arquivos corrompidos!")
+        nextion.Enviar("tMsg2", "Reformate utilizando o computador!")
+
 while flagCheio:
     xmlStream = ET.parse(arq_parada)
     xmlstr = ET.tostring(xmlStream.getroot()).decode()
@@ -1363,7 +1386,7 @@ while flagCheio:
         flagCheio = False
 
 
-xml = MexerXml()
+
 rtc = Clock()
 DetectaAFK()
 BateuMeta()
