@@ -1312,6 +1312,7 @@ def RetomarProducao():
 
 
 nextion = Nextion()
+xml = MexerXml()
 Server()
 
 nextion.Enviar("dim=100", False, False)
@@ -1354,6 +1355,7 @@ while flagVazio:
 
 while flagCorrompido:
     try:
+        flagCorrompido = True
         xmlStream = ET.parse(arq_parada)
         xmlraiz = xmlStream.getroot()
         flagCorrompido = False
@@ -1363,6 +1365,7 @@ while flagCorrompido:
 
 
     try:
+        flagCorrompido = True
         xmlStream = ET.parse(arq_prod)
         xmlraiz= xmlStream.getroot()
         flagCorrompido = False
@@ -1384,7 +1387,7 @@ while flagCheio:
         flagCheio = False
 
 
-xml = MexerXml()
+
 rtc = Clock()
 DetectaAFK()
 BateuMeta()
