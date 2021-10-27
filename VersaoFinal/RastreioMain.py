@@ -101,7 +101,8 @@ configurando = True
 bateu = False
 flagVazio = True
 flagCheio = True
-flagCorrompido = True
+flagCorrompidoParada = True
+flagCorrompidoProd = True
 inacabada = False
 
 dictOperadores = {}
@@ -116,13 +117,16 @@ rolo = ''
 qtdRolos = 0
 
 if MAQUINA is 1:
+    tempo_parada = 60
     rolos = {0:'25x10', 1:'25x0,9', 2:'25x4,5'} 
 elif MAQUINA is 2:
+    tempo_parada = 40
     rolos = {0:'50x10', 1:'50x4,5'}
 elif MAQUINA is 3:
+    tempo_parada= 40
     rolos = {0:'100x10', 1:'100x4,5', 2:'12x10', 3:'12x4,5'} 
 dictXmlProd = {'lote':'', 'op':'', 'inicio':'', 'fim':'', 'maquina':str(MAQUINA), 'operador':'', 'eixo':'', 'meta':'', 'qtd':'0', 'rolosad':'', 'rolocad':''}
-dictXmlParada = {'data':'', 'lote':'', 'op':'', 'tipo':NAO_INFORMADO, 'maquina':str(MAQUINA), 'operador':'', 'duracao':'40'}
+dictXmlParada = {'data':'', 'lote':'', 'op':'', 'tipo':NAO_INFORMADO, 'maquina':str(MAQUINA), 'operador':'', 'duracao':str(tempo_parada)}
 
 idProd = ''
 idParada = ''
@@ -170,8 +174,8 @@ class Server(Thread): #
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR, 1 )
                 try:
-                    HOST = netifaces.ifaddresses('eth0')[2][0]['addr']
-                    #HOST = netifaces.ifaddresses('wlan0')[2][0]['addr']
+                    #HOST = netifaces.ifaddresses('eth0')[2][0]['addr']
+                    HOST = netifaces.ifaddresses('wlan0')[2][0]['addr']
                     sock.bind((HOST, PORT))
                     sock.listen()
                     print('ouve')
@@ -298,6 +302,7 @@ class Clock(Thread):
         global prodInParada
         global irpraparada
         global tavaAfk
+        global tempo_parada
         while True:
             startTempo2min = datetime.now()
             while datetime.now() - startTempo2min < timedelta(minutes=2):
@@ -328,7 +333,7 @@ class Clock(Thread):
                         dictXmlParada['tipo'] = NAO_INFORMADO
                         dictXmlParada['duracao'] = (datetime.now().replace(microsecond=0) - datetime.fromisoformat(dictXmlParada['data'])).total_seconds()
                         if tavaAfk:
-                            dictXmlParada['duracao'] = str(int(dictXmlParada['duracao']) + 40)
+                            dictXmlParada['duracao'] = str(int(dictXmlParada['duracao']) + tempo_parada)
                             tavaAfk = False
                         xml.SalvarAlteracoes(True, True)
                         prodInParada = False
@@ -389,7 +394,8 @@ class DetectaAFK(Thread):
         global timerAFK
         global irpraparada
         global tavaAfk
-        tempoAFK = 40
+        global tempo_parada
+        tempoAFK = tempo_parada
         while True:
             sleep(0.01)
             flagAFK = True
@@ -884,7 +890,7 @@ class Nextion(Thread): #
         
     def Enviar(self, varNextion, msgEnviar, texto = True): #
 
-        #print('para: ' + str(varNextion) + '  enviando: ' + str(msgEnviar))
+        print('para: ' + str(varNextion) + '  enviando: ' + str(msgEnviar))
 
         varNextion = bytes(varNextion, encoding='iso-8859-1')
         ser.write(varNextion)
@@ -936,6 +942,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             inicioProd = True
         else:
             inicioProd = False
+            print("INACABADA")
             nextion.Enviar("inacabada=1", False, False)
               
     if tela is T_DATAHORA or tela is T_AJUSTAR:
@@ -1202,7 +1209,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             rtc.telaAtual = -1
             dictXmlParada['duracao'] = str(round((datetime.now().replace(microsecond=0) - datetime.fromisoformat(dictXmlParada['data'])).total_seconds()))
             if tavaAfk:
-                dictXmlParada['duracao'] = str(int(dictXmlParada['duracao']) + 40)
+                dictXmlParada['duracao'] = str(int(dictXmlParada['duracao']) + tempo_parada)
                 tavaAfk = False
             xml.SalvarAlteracoes(False, True)
             pass
@@ -1353,39 +1360,65 @@ while flagVazio:
         nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
         nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
 
-while flagCorrompido:
+while flagCorrompidoParada or flagCorrompidoProd:
     try:
-        flagCorrompido = True
+        flagCorrompidoParada = True
         xmlStream = ET.parse(arq_parada)
-        xmlraiz = xmlStream.getroot()
-        flagCorrompido = False
+        xmlraiz = xmlStream.getroot
+        
+        flagCorrompidoParada = False
     except Exception as e:
         nextion.Enviar("tMsg", "Arquivos corrompidos!")
         nextion.Enviar("tMsg2", "Reformate utilizando o computador!")
 
 
     try:
-        flagCorrompido = True
+        flagCorrompidoProd = True
         xmlStream = ET.parse(arq_prod)
         xmlraiz= xmlStream.getroot()
-        flagCorrompido = False
+        
+        prods = [prod for prod in xmlraiz.findall('./producoesM' + str(MAQUINA) + '/producao')]
+        print(prods)
+        if  not prods == []:
+            loteVazio = prods[-1]
+            print("LOTEEEEE:"+loteVazio+"...")
+            if loteVazio == '':
+                raise Exception
+        
+        flagCorrompidoProd = False
     except Exception as e:
         # log error
         nextion.Enviar("tMsg", "Arquivos corrompidos!")
         nextion.Enviar("tMsg2", "Reformate utilizando o computador!")
 
+    try:
+        ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+        #ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
+        nextion.Enviar("tIP", ip)
+    except:
+        nextion.Enviar("tIP", "Conectando à Internet")
+
 while flagCheio:
     xmlStream = ET.parse(arq_parada)
     xmlstr = ET.tostring(xmlStream.getroot()).decode()
 
-    if len(xmlstr) > 57000:
+    if len(xmlstr) > 300000:
         nextion.Enviar("tMsg", "Arquivos lotados!")
         nextion.Enviar("tMsg2", "Limpe o armazenamento ou importe!")
 
     else:
         flagCheio = False
 
+    try:
+       print('esse')
+       ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+       #ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
+       nextion.Enviar("tIP", ip)
+    except:
+        nextion.Enviar("tIP", "Conectando à Internet")
 
+nextion.Enviar("tMsg", "Arquivo de Configuracao Importado!")
+nextion.Enviar("tMsg2", " ")
 
 rtc = Clock()
 DetectaAFK()
