@@ -3,7 +3,7 @@ import struct
 
 ser = serial.Serial(
     port='/dev/ttyS0',
-    baudrate=19200,           
+    baudrate=57600,      
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
@@ -12,5 +12,6 @@ ser = serial.Serial(
     
 ff = struct.pack('B', 0xff)
 
+ser.write(bytes("otraflag=10", 'iso-8859-1'))
 ser.write(bytes("rest", 'iso-8859-1'))
 ser.write(ff+ff+ff)

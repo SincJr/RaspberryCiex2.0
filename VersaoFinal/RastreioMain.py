@@ -5,9 +5,9 @@
 # Contratada: Sinc Júnior
 #
 # Equipe do projeto:
-# Jonathan Brown 
+# Jonathan Brown
 # Luiza Dexheimer
-# Vinicius Lima 
+# Vinicius Lima
 #
 #
 # Este código tem por função:
@@ -85,7 +85,7 @@ ser = serial.Serial(
     bytesize=serial.EIGHTBITS,
     timeout=0.15 #mudar pra 0 que fica bem mais rapido. 1 é melhor pra debug
     )
-    
+
 ff = struct.pack('B', 0xff)
 
 GPIO.setmode(GPIO.BCM)
@@ -101,7 +101,8 @@ configurando = True
 bateu = False
 flagVazio = True
 flagCheio = True
-flagCorrompido = True
+flagCorrompidoParada = True
+flagCorrompidoProd = True
 inacabada = False
 
 dictOperadores = {}
@@ -116,13 +117,16 @@ rolo = ''
 qtdRolos = 0
 
 if MAQUINA is 1:
-    rolos = {0:'25x10', 1:'25x0,9', 2:'25x4,5'} 
+    tempo_parada = 60
+    rolos = {0:'25x10', 1:'25x0,9', 2:'25x4,5'}
 elif MAQUINA is 2:
+    tempo_parada = 40
     rolos = {0:'50x10', 1:'50x4,5'}
 elif MAQUINA is 3:
-    rolos = {0:'100x10', 1:'100x4,5', 2:'12x10', 3:'12x4,5'} 
+    tempo_parada= 40
+    rolos = {0:'100x10', 1:'100x4,5', 2:'12x10', 3:'12x4,5'}
 dictXmlProd = {'lote':'', 'op':'', 'inicio':'', 'fim':'', 'maquina':str(MAQUINA), 'operador':'', 'eixo':'', 'meta':'', 'qtd':'0', 'rolosad':'', 'rolocad':''}
-dictXmlParada = {'data':'', 'lote':'', 'op':'', 'tipo':NAO_INFORMADO, 'maquina':str(MAQUINA), 'operador':'', 'duracao':'40'}
+dictXmlParada = {'data':'', 'lote':'', 'op':'', 'tipo':NAO_INFORMADO, 'maquina':str(MAQUINA), 'operador':'', 'duracao':str(tempo_parada)}
 
 idProd = ''
 idParada = ''
@@ -160,9 +164,9 @@ class Server(Thread): #
     def __init__(self):
         Thread.__init__(self)
         self.daemon = True
-        self.start()  
+        self.start()
         print(Thread.getName(self) + ' Server')
-        
+
     def run(self):
         global flagVazio
         while True:
@@ -202,7 +206,7 @@ class Server(Thread): #
                                 paradao = xmlRoot.find('./paradasM'+str(MAQUINA))
                                 todasParadas = [p for p in xmlRoot.findall('./paradasM'+str(MAQUINA)+'/parada')]
                                 ultima = todasParadas[-1]
-                                
+
                                 for paradinha in todasParadas:
                                     if paradinha == ultima:
                                         break
@@ -227,12 +231,12 @@ class Server(Thread): #
 
 
                                 xmlStream.write(arq_prod)
-                                
+
                             else:
                                 print('entrou')
                                 reatualizarParada = False
                                 reatualizarProd = False
-                                
+
                                 if dictXmlProd['fim'] == '' and idProd:
                                     dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat()
                                     xml.SalvarAlteracoes(True, False)
@@ -245,7 +249,7 @@ class Server(Thread): #
                                     if dictXmlParada['tipo'] == '':
                                         dictXmlParada['tipo'] = NAO_INFORMADO
                                     print("E AQUI TB")
-                                        
+
                                     xml.SalvarAlteracoes(False, True)
                                     dictXmlParada['tipo'] = ''
                                     dictXmlParada['duracao'] = ''
@@ -262,8 +266,8 @@ class Server(Thread): #
                                 pacotes = [xmlB[i:i+tamanhoPacotes] for i in range(0, len(xmlstr), tamanhoPacotes)]
                                 for pacote in pacotes:
                                     client.send(bytes(pacote))
-                                        
-                                        
+
+
                                 print("POXA :/")
                                 xmlStream = ET.parse(arq_prod)
                                 xmlstr = ET.tostring(xmlStream.getroot()).decode()
@@ -277,35 +281,36 @@ class Server(Thread): #
                                 print('deu?')
 
                                 xml.SalvarAlteracoes(reatualizarProd, reatualizarParada)
-                                
+
                         else:
                             print('Erro!')
                 except:
                     pass
 
 
-class Clock(Thread): 
-    
+class Clock(Thread):
+
     telaAtual = 0
-    
+
     def __init__(self):
         Thread.__init__(self)
         self.daemon = True
         self.start()
         print(Thread.getName(self) + 'Clock')
-        
+
     def run(self):
         global prodInParada
         global irpraparada
         global tavaAfk
+        global tempo_parada
         while True:
             startTempo2min = datetime.now()
             while datetime.now() - startTempo2min < timedelta(minutes=2):
-                
+
                 startTempo5s = datetime.now()
-                        
+
                 while datetime.now() - startTempo5s < timedelta(seconds=5):
-                    
+
                     startTempo = datetime.now()
                     while datetime.now() - startTempo < timedelta(seconds=.3):
                         sleep(0.01)
@@ -313,34 +318,34 @@ class Clock(Thread):
 
                     if self.telaAtual is T_DATAHORA and not nextion.atualizando:
                         nextion.Atualizar(True, False)
-                    
+
                     if self.telaAtual is T_PRODUZINDO and not nextion.atualizando:
                         nextion.Atualizar(True, True)
-                    
+
                     if irpraparada:
-                        nextion.Enviar("click tParada,0", False, False) 
+                        nextion.Enviar("click tParada,0", False, False)
                         print('ueee')
                         irpraparada = False
-                    
-                    #print('combo: ' + str(self.telaAtual) + ' ... ' + str(prodInParada)) 
+
+                    #print('combo: ' + str(self.telaAtual) + ' ... ' + str(prodInParada))
                     if (self.telaAtual is T_PARADAS or self.telaAtual is T_VOLTAR) and prodInParada and not wait:
                         nextion.Enviar("page pProducao", False, False)
                         dictXmlParada['tipo'] = NAO_INFORMADO
                         dictXmlParada['duracao'] = (datetime.now().replace(microsecond=0) - datetime.fromisoformat(dictXmlParada['data'])).total_seconds()
                         if tavaAfk:
-                            dictXmlParada['duracao'] = str(int(dictXmlParada['duracao']) + 40)
+                            dictXmlParada['duracao'] = str(int(dictXmlParada['duracao']) + tempo_parada)
                             tavaAfk = False
                         xml.SalvarAlteracoes(True, True)
                         prodInParada = False
                         print('B B B')
                     else:
                         prodInParada = False
-                
 
-                        
+
+
                 if self.telaAtual is T_PRODUZINDO and not nextion.atualizando:
                         nextion.Atualizar(False, False)
-                        
+
                 if self.telaAtual is T_INICIAL:
                     try:
                         print('esse')
@@ -352,7 +357,7 @@ class Clock(Thread):
             if self.telaAtual is T_PRODUZINDO:
                 dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat()
                 xml.SalvarAlteracoes(True, False)
-        
+
     def pegarHora(self):
         now = datetime.now()
         hour = '{:02d}'.format(now.hour)
@@ -361,7 +366,7 @@ class Clock(Thread):
         minute = str(minute)
         second = '{:02d}'.format(now.second)
         second = str(second)
-        
+
         return hour, minute, second
 
     def pegarData(self):
@@ -372,7 +377,7 @@ class Clock(Thread):
         month = str(month)
         year = '{:04d}'.format(now.year)
         year = str(year)
-         
+
         return day, month, year
 
 
@@ -382,14 +387,15 @@ class DetectaAFK(Thread):
         self.daemon = True
         self.start()
         print(Thread.getName(self) + 'AFK')
-        
+
     def run(self):
         global produzindo
         global wait
         global timerAFK
         global irpraparada
         global tavaAfk
-        tempoAFK = 40
+        global tempo_parada
+        tempoAFK = tempo_parada
         while True:
             sleep(0.01)
             flagAFK = True
@@ -418,7 +424,7 @@ class BateuMeta(Thread):
         self.daemon = True
         self.start()
         print(Thread.getName(self) + 'BateuMeta')
-        
+
     def run(self):
         global produzindo
         global bateu
@@ -430,7 +436,7 @@ class BateuMeta(Thread):
                     bateu = True
                     nextion.Atualizar(False, True)
                     nextion.Enviar("click bProd,0", False, False)
-                    
+
 
 def FuncInterrupt(porta):
     global producao
@@ -438,7 +444,7 @@ def FuncInterrupt(porta):
     global produzindo
     global timerAFK
     global prodInParada
-    
+
     print("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
 
     inicioCronometro = datetime.now()
@@ -446,17 +452,17 @@ def FuncInterrupt(porta):
     while datetime.now() - inicioCronometro < timedelta(milliseconds=50):
         sleep(0.01)
         pass
-    
+
     if GPIO.input(INTERRUPT_PIN) != GPIO.LOW:
         return
     print('pos-timer')
-    
+
     if not configurando:
         producao += 1
         dictXmlProd['qtd'] = str(producao)
         timerAFK = False
-        dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat() 
-        
+        dictXmlProd['fim'] = datetime.now().replace(microsecond=0).isoformat()
+
         if produzindo is False:
             print('A A A')
             prodInParada = True
@@ -489,15 +495,15 @@ class MexerXml():
         global arq_config
         xmlC = ET.parse(arq_config)
         xmlConfig = xmlC.getroot()
-        
+
         mudouAlgo = False
-        
+
         for eixoxml in xmlConfig.findall('./eixos/eixo'):
             eixonome = eixoxml.find('./nome')
             rolonome = eixoxml.find('./rolos/rolo/nome')
             eixoEsquerda, eixoDireita = eixonome.text.split('x')
             roloEsquerda, roloDireita = rolonome.text.split('x')
-            
+
             if eixoDireita == '45':
                 print('to no 45 E')
                 eixonome.text = eixoEsquerda  + 'x' + '4,5'
@@ -506,7 +512,7 @@ class MexerXml():
                 print('to no 09 E')
                 eixonome.text = eixoEsquerda  + 'x' + '0,9'
                 mudouAlgo = True
-                
+
             if roloDireita == '45':
                 print('to no 45 R')
                 rolonome.text = roloEsquerda  + 'x' + '4,5'
@@ -515,11 +521,11 @@ class MexerXml():
                 print('to no 09 R')
                 rolonome.text = roloEsquerda  + 'x' + '0,9'
                 mudouAlgo = True
-                
+
             if mudouAlgo:
                 xmlC.write(arq_config)
-            
-    
+
+
     def PegarEixo(self, rolo):
         global arq_config
         global qtdRolos
@@ -527,7 +533,7 @@ class MexerXml():
         xml = ET.parse(arq_config)
         xmlRoot = xml.getroot()
         eixo =''
-        
+
         try:
             for eixos in xmlRoot.findall('./eixos/eixo'):
                 nomeRolo = eixos.find('./rolos/rolo/nome').text
@@ -539,13 +545,13 @@ class MexerXml():
 
         if eixo == '':
             eixo = 'Nao encontrado'
-    
+
         dictXmlProd['eixo'] = eixo
 
     def PegarRolo(self, eixoAntigo):
         global arq_config
         global qtdRolos
-        
+
         xml = ET.parse(arq_config)
         xmlRoot = xml.getroot()
         roloAntigo = 'Nao encontrado'
@@ -560,7 +566,7 @@ class MexerXml():
             roloAntigo = 'Nao encontrado'
 
         return roloAntigo
-         
+
     def GerarNovaProd(self):
         global arq_prod
         global idProd
@@ -571,13 +577,13 @@ class MexerXml():
             idProd = prodFeita.get('id')
 
         idProd = str(int(idProd) + 1) if idProd != '' else '1'
-            
+
         print(idProd)
-        
+
         xmlProdRaiz = xmlProdRaiz.find('./producoesM' + str(MAQUINA))
         ET.SubElement(xmlProdRaiz, 'producao').set('id', idProd)
-        
-        
+
+
 
         xmlProdRaiz = xmlProdRaiz.find('./producao[@id="'+ idProd +'"]')
 
@@ -597,20 +603,20 @@ class MexerXml():
 
     def GerarNovaParada(self):
         global arq_parada
-        global idParada        
+        global idParada
         xmlParada = ET.parse(arq_parada)
         xmlParadaRaiz = xmlParada.getroot()
 
         for paradaFeita in xmlParadaRaiz.findall('./paradasM' + str(MAQUINA) + '/parada'):
             idParada = paradaFeita.get('id')
-            
+
 
         idParada = str(int(idParada) + 1) if idParada != '' else '1'
 
         xmlParadaRaiz = xmlParadaRaiz.find('./paradasM' + str(MAQUINA))
         ET.SubElement(xmlParadaRaiz, 'parada').set('id', idParada)
-        
-        
+
+
         xmlParadaRaiz = xmlParadaRaiz.find('./parada[@id="'+ idParada +'"]')
 
         ET.SubElement(xmlParadaRaiz, 'data')
@@ -623,30 +629,30 @@ class MexerXml():
 
 
         xmlParada.write(arq_parada)
- 
+
     def PegarOpcoes(self, tipo):
         xmlConfig = ET.parse(arq_config)
         xmlConfigRoot = xmlConfig.getroot()
-        
+
         print('pt2')
         dictOpcoes = {}
-        
+
         opcoes = xmlConfigRoot.findall(tipo)
-            
+
         for index, nome  in enumerate(opcoes):
-            dictOpcoes[index] = nome.text   
-        
+            dictOpcoes[index] = nome.text
+
         return dictOpcoes, len(dictOpcoes)
-    
-    def SalvarAlteracoes(self, atualizarProd, atualizarParada): 
+
+    def SalvarAlteracoes(self, atualizarProd, atualizarParada):
         if atualizarProd:
             xmlProducoes = ET.parse(arq_prod)
             rootProducoes = xmlProducoes.getroot()
-            
+
             print("aaa" + idProd)
             rootProducoes = rootProducoes.find('./producoesM' + str(MAQUINA) + '/producao[@id="' + idProd + '"]')
             print(rootProducoes.text)
-            
+
             for tipo, _ in dictXmlProd.items():
                 print(tipo)
                 xmlProd = rootProducoes.find('./' + tipo)
@@ -658,7 +664,7 @@ class MexerXml():
             rootParadas = xmlParadas.getroot()
 
             rootParadas = rootParadas.find('./paradasM' + str(MAQUINA) + '/parada[@id="'+ idParada +'"]')
-            
+
             for tipo, _ in dictXmlParada.items():
                 xmlParada = rootParadas.find('./' + tipo)
                 xmlParada.text = str(dictXmlParada[tipo])
@@ -682,18 +688,18 @@ class MexerXml():
 
             pass
 
-    
+
 class Nextion(Thread): #
-    
+
     atualizando = False
-    
+
     def __init__(self):
         global rolo
         Thread.__init__(self)
         self.daemon = True
         self.start()
         print(Thread.getName(self) + 'Nextion')
-        
+
     def run(self):
         sair = False
         global podeDormir
@@ -711,7 +717,7 @@ class Nextion(Thread): #
             Alt = False
             Setinha = False
             texto = []
-            
+
             msg = ser.read()
             #print('.')
             while msg:
@@ -719,7 +725,7 @@ class Nextion(Thread): #
                 msg = msg.decode('iso-8859-1')
                 print(msg)
                 self.atualizando = True
-                
+
                 if msg == 'e':          #BOTAO OK
                     sair = False
                     OK = True
@@ -732,7 +738,7 @@ class Nextion(Thread): #
                         elif msg == b'\t':
                             msg = 9
                             sinais.append(msg)
-                        else:            
+                        else:
                             msg = str(msg)
                             msg = msg.replace('b', '', 1)
                             msg = msg.replace("'", '')
@@ -740,8 +746,8 @@ class Nextion(Thread): #
                             msg = int(msg, 10)
                             sinais.append(msg)
                     botaoOK = sinais[0]
-        
-        
+
+
                 elif msg == 'p':        #INFORMACAO
                     sair = False
                     strRecebida = ''
@@ -751,14 +757,14 @@ class Nextion(Thread): #
                             msg = ser.read()
                             msg = ser.read()
                             sair = True
-                        else:            
+                        else:
                             msg = msg.decode('iso-8859-1')
                             strRecebida += msg
                     texto.append(strRecebida)
                     temMensagem = True
-                    
-                            
-                            
+
+
+
                 elif msg == 'z': #NOVA TELA
                     sair = False
                     while not sair:
@@ -769,7 +775,7 @@ class Nextion(Thread): #
                             sair = True
                         elif msg == b'\t':
                             sinalTela = 9
-                        else:            
+                        else:
                             msg = str(msg)
                             msg = msg.replace('b', '', 1)
                             msg = msg.replace("'", '')
@@ -777,9 +783,9 @@ class Nextion(Thread): #
                             msg = int(msg, 10)
                             sinalTela = msg
                             print('CCC' + str(sinalTela))
-                            
-                    
-                    
+
+
+
                 elif msg == 'y':        #INFO BOTAO ALTERNATIVAS
                     sair = False
                     sinais = []
@@ -789,7 +795,7 @@ class Nextion(Thread): #
                         msg = ser.read()
                         if msg == b'\xff':
                             sair = True
-                        else:            
+                        else:
                             msg = str(msg)
                             msg = msg.replace('b', '', 1)
                             msg = msg.replace("'", '')
@@ -801,7 +807,7 @@ class Nextion(Thread): #
                             sinais.append(msg)
                     botaoTela = sinais[0]
                     qualOpcao = sinais[1]
-                    
+
                 elif msg  == 'k':
                     sair = False
                     sinais = []
@@ -821,32 +827,32 @@ class Nextion(Thread): #
                     scrollTela = int(sinais[0], 10)
                     direcao = sinais[1]
 
-                    
+
                 msg = ser.read()
                 podeDormir = True
-    
-                
+
+
             self.atualizando = False
 
             if texto:
                 for coisa in texto:
                     logicaPrincipal(botaoOK, False, coisa)  #vai pra funcao das telas
-                    
+
             if Alt:
                 logicaPrincipal(botaoTela, False, qualOpcao)
-                
+
             if Setinha:
                 logicaPrincipal(scrollTela, False, direcao)
 
             if sinalTela is not -1:
                 logicaPrincipal(sinalTela, True, False)
-        
+
 
     def Atualizar(self, menosInfo, progresso):
         global bateu
         global producao
         global qtdAntiga
-        
+
         if not menosInfo:
             telinhaTemp = rtc.telaAtual
             self.atualizando = True
@@ -864,13 +870,13 @@ class Nextion(Thread): #
             except:
                 print('misterio')
                 nextion.Enviar("tIP", "Conectando à Internet")
-            
+
             if bateu:
                 nextion.Enviar("vis bProd,1", False, False)
-        
+
             self.atualizando = False
             rtc.telaAtual = telinhaTemp
-        
+
         if progresso:
             prog = progressoMeta()
             nextion.Enviar("tProgresso", str(producao + qtdAntiga))
@@ -878,13 +884,13 @@ class Nextion(Thread): #
                 nextion.Enviar('tBarra.val=', str(100), False)
             else:
                 nextion.Enviar('tBarra.val=', str(prog), False)
-        
+
         nextion.Enviar("tHora", ':'.join(rtc.pegarHora()))
         nextion.Enviar("tData", '/'.join(rtc.pegarData()))
-        
+
     def Enviar(self, varNextion, msgEnviar, texto = True): #
 
-        #print('para: ' + str(varNextion) + '  enviando: ' + str(msgEnviar))
+        print('para: ' + str(varNextion) + '  enviando: ' + str(msgEnviar))
 
         varNextion = bytes(varNextion, encoding='iso-8859-1')
         ser.write(varNextion)
@@ -896,10 +902,10 @@ class Nextion(Thread): #
             else:
                 msgEnviar = bytes(msgEnviar, encoding='iso-8859-1')
             ser.write(msgEnviar)
-        
+
         ser.write(ff+ff+ff)
-        
-        
+
+
 def logicaPrincipal(tela, entrando, mensagem):   #
     global configurando
     global produzindo
@@ -914,19 +920,19 @@ def logicaPrincipal(tela, entrando, mensagem):   #
     except NameError as e:
         print(e)
         return
-    
+
     print('logica principal ' + str(tela) + ' = ' + str(mensagem))
-    
+
     if tela is T_INICIAL:
         global flagVazio
         global inacabada
-        
+
         rtc.telaAtual = 0
 
         nextion.Enviar("dim=100", False, False)
-           
+
         print('inicial')
-        
+
 
         nextion.Enviar("tMsg", "Arquivo de Configuracao Importado!")
         nextion.Enviar("tMsg2", " ")
@@ -936,8 +942,9 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             inicioProd = True
         else:
             inicioProd = False
+            print("INACABADA")
             nextion.Enviar("inacabada=1", False, False)
-              
+
     if tela is T_DATAHORA or tela is T_AJUSTAR:
         configurando = True
         if entrando:
@@ -950,25 +957,25 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                 print('wasssss')
                 global horario
                 global data
-                mudarDH = False 
+                mudarDH = False
                 if len(mensagem) is 8:
                     horario = mensagem
                 elif len(mensagem) is 10:
                     data = mensagem
-                
+
                     hora, minuto, segundo = horario.split(':')
                     dia, mes, ano = data.split('/')
-                    
+
                     dataNova = datetime(int(ano), int(mes), int(dia), int(hora), int(minuto), int(segundo))
-                    
+
                     if dataNova - datetime.now() > timedelta(minutes = 5):
                         mudarDH = True
-                    
+
                     if mudarDH:
                         dataNova = dataNova.strftime('%Y-%m-%d %H:%M:%S')
 
                         subprocess.Popen(['sudo','date','-s', dataNova])
-                        
+
     if tela is T_OP:
         configurando = True
         if entrando:
@@ -976,7 +983,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         else:
             dictXmlProd['op'] = mensagem
             dictXmlParada['op'] = mensagem
-            
+
     if tela is T_LOTE:
         print(dictXmlProd['op'])
         configurando = True
@@ -987,14 +994,14 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         else:
             dictXmlProd['lote'] = 'FP' + mensagem + anoLote
             dictXmlParada['lote'] = 'FP' + mensagem + anoLote
-            
+
     if tela is T_METsemAD:
         configurando = True
         if entrando:
             nextion.Enviar('tMetSAd', '3500')
         else:
             dictXmlProd['rolosad'] = mensagem
-            
+
     if tela is T_METcomAD:
         configurando = True
         if entrando:
@@ -1003,7 +1010,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             dictXmlProd['rolocad'] = int(mensagem)
             print(mensagem)
             print(type(mensagem))
-            
+
     if tela is T_OPERADOR:
         configurando = True
         global conjuntoOperadores
@@ -1035,39 +1042,39 @@ def logicaPrincipal(tela, entrando, mensagem):   #
 
             for lin in range(linhas):
                 nextion.Enviar("tO"+str(lin), conjuntoOperadores[colunaAtual][lin])
-                  
+
             if colunas > 1:
                 nextion.Enviar("vis bR,1", False, False)
 
         else:
             if mensagem == '>' or mensagem == '<':
                 colunaAtual = colunaAtual + 1 if mensagem == '>' else colunaAtual - 1
-                
-                
+
+
                 if colunas > (1+colunaAtual):
-                    nextion.Enviar("vis bR,1",False,False)  
+                    nextion.Enviar("vis bR,1",False,False)
                 else:
                     nextion.Enviar("vis bR,0",False,False)
-                    
+
                 if colunaAtual > 0:
                     nextion.Enviar("vis bL,1",False,False)
                 else:
                     nextion.Enviar("vis bL,0",False,False)
-                    
-                    
+
+
                 for lin in range(linhas):
                     nome = conjuntoOperadores[colunaAtual][lin]
                     if nome == ' ':
                         nextion.Enviar("tO" + str(lin), " ")
                     else:
                         nextion.Enviar("tO"+str(lin), nome)
-                
+
             else:
                 escolha = mensagem + colunaAtual*4
                 operador = dictOperadores[escolha]
                 dictXmlProd['operador'] = operador
                 dictXmlParada['operador'] = operador
-            
+
     if tela is T_ROLO:
         configurando = True
         global rolo
@@ -1078,17 +1085,17 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             rolo = rolos[mensagem]
             xml.PegarEixo(rolo)
             print(dictXmlProd['eixo'])
-            
+
     if tela is T_META:
         configurando = True
         if entrando:
             metaCalculada = str(calcularMeta())
             if metaCalculada != '-1':
                 nextion.Enviar('tMeta', metaCalculada)
-            
+
         else:
             dictXmlProd['meta'] = str(int(mensagem) - qtdAntiga)
-           
+
     if tela is T_PRODUZINDO:
         configurando = False
         global parada
@@ -1108,12 +1115,12 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             rtc.telaAtual = 10
             xml.SalvarAlteracoes(True, False)
 
-            
+
         else:
             xml.SalvarAlteracoes(True, False)
             produzindo = False
             rtc.telaAtual = -1
-            
+
     if tela is T_PARADAS:
         configurando = False
         global inicioParada
@@ -1150,48 +1157,48 @@ def logicaPrincipal(tela, entrando, mensagem):   #
 
             for lin in range(linhas):
                     nextion.Enviar("tP"+str(lin), conjuntoParadas[colunaAtual][lin])
-                  
+
             if colunas > 1:
                 nextion.Enviar("vis bR,1", False, False)
-        
-            
+
+
             wait = False
         else:
             if mensagem == '>' or mensagem == '<':
                 colunaAtual = colunaAtual + 1 if mensagem == '>' else colunaAtual - 1
-                
-                
+
+
                 if colunas > (1+colunaAtual):
-                    nextion.Enviar("vis bR,1",False,False)  
+                    nextion.Enviar("vis bR,1",False,False)
                 else:
                     nextion.Enviar("vis bR,0",False,False)
-                    
+
                 if colunaAtual > 0:
                     nextion.Enviar("vis bL,1",False,False)
                 else:
                     nextion.Enviar("vis bL,0",False,False)
-                    
+
                 for lin in range(linhas):
                     tipo = conjuntoParadas[colunaAtual][lin]
-                    
+
                     if tipo == ' ':
                         nextion.Enviar("tP" + str(lin), " ")
-                        
+
                     else:
                         nextion.Enviar("tP"+str(lin), tipo)
-                
+
             else:
                 escolha = mensagem + colunaAtual*4
                 tipoParada = dictParadas[escolha]
                 dictXmlParada['tipo'] = tipoParada
                 print(dictXmlParada['tipo'])
                 xml.SalvarAlteracoes(False, True)
-        
+
         #tolerancia = datetime.now()
         #while datetime.now() - tolerancia < timedelta(seconds=5):
         #    pass
-        
-            
+
+
     if tela is T_VOLTAR:
         wait = True
         configurando = False
@@ -1202,7 +1209,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
             rtc.telaAtual = -1
             dictXmlParada['duracao'] = str(round((datetime.now().replace(microsecond=0) - datetime.fromisoformat(dictXmlParada['data'])).total_seconds()))
             if tavaAfk:
-                dictXmlParada['duracao'] = str(int(dictXmlParada['duracao']) + 40)
+                dictXmlParada['duracao'] = str(int(dictXmlParada['duracao']) + tempo_parada)
                 tavaAfk = False
             xml.SalvarAlteracoes(False, True)
             pass
@@ -1220,7 +1227,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                 nextion.Enviar("rest", False, False)
                 GPIO.cleanup()
                 os.execv('/usr/bin/python3', [sys.argv[0],os.path.abspath(__file__)])
-                
+
     if tela is T_DESLIGAR:
         configurando = True
         if entrando:
@@ -1235,11 +1242,11 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                 ser.close()
                 GPIO.cleanup()
                 subprocess.Popen(['sudo','shutdown','-h','now'])
-               
+
     if tela is T_RETOMAR:
         if entrando:
             dataAntiga = datetime.fromisoformat(dictXmlProd['inicio'])
-            dataAntiga = dataAntiga.strftime('%d/%m/%Y') 
+            dataAntiga = dataAntiga.strftime('%d/%m/%Y')
             nextion.Enviar("tData", dataAntiga)
             print(dictXmlProd['eixo'])
             nextion.Enviar("tLote", dictXmlProd['lote'])
@@ -1267,9 +1274,9 @@ def logicaPrincipal(tela, entrando, mensagem):   #
                 metaAntiga = int(temporario['meta'])
                 dictXmlProd['meta'] = str(int(temporario['meta']) - int(temporario['qtd']))
                 dictXmlProd['qtd'] = '0'
-                
+
                 qtdAntiga = int(temporario['qtd'])
-                
+
 
 
                 inicioProd = False
@@ -1291,7 +1298,7 @@ def RetomarProducao():
 
     try:
         prods = [prod for prod in arvore.findall('./producoesM' + str(MAQUINA) + '/producao')]
-        
+
         ultima = prods[-1]
         metaUltima = ultima.find('meta').text
         qtdUltima = ultima.find('qtd').text
@@ -1308,7 +1315,7 @@ def RetomarProducao():
 
         idProd = ultima.get('id')
     else:
-        inacabada = False 
+        inacabada = False
 
 
 nextion = Nextion()
@@ -1317,11 +1324,11 @@ Server()
 
 nextion.Enviar("dim=100", False, False)
 
-while flagVazio: 
-    try:     
+while flagVazio:
+    try:
         xmlConf = ET.parse(arq_config)
         raiz = xmlConf.getroot()
-    
+
         try:
             print('esse')
             ip = netifaces.ifaddresses('eth0')[2][0]['addr']
@@ -1331,11 +1338,11 @@ while flagVazio:
             nextion.Enviar("tIP", "Conectando à Internet")
 
         start = datetime.now()
-        
+
         while datetime.now() - start < timedelta(seconds=0.5):
             sleep(0.01)
             pass
-    
+
         for pessoa in raiz.findall('./operadores/operador'):
             flagVazio = False
             break
@@ -1353,40 +1360,65 @@ while flagVazio:
         nextion.Enviar("tMsg", "Sem arquivo de Configuracao!")
         nextion.Enviar("tMsg2", "Importe o arquivo de Configuracao!")
 
-while flagCorrompido:
+while flagCorrompidoParada or flagCorrompidoProd:
     try:
-        flagCorrompido = True
+        flagCorrompidoParada = True
         xmlStream = ET.parse(arq_parada)
-        xmlraiz = xmlStream.getroot()
-        flagCorrompido = False
+        xmlraiz = xmlStream.getroot
+
+        flagCorrompidoParada = False
     except Exception as e:
         nextion.Enviar("tMsg", "Arquivos corrompidos!")
         nextion.Enviar("tMsg2", "Reformate utilizando o computador!")
 
 
     try:
-        flagCorrompido = True
+        flagCorrompidoProd = True
         xmlStream = ET.parse(arq_prod)
         xmlraiz= xmlStream.getroot()
-        flagCorrompido = False
+
+        prods = [prod for prod in xmlraiz.findall('./producoesM' + str(MAQUINA) + '/producao')]
+        print(prods)
+        if  not prods == []:
+            loteVazio = prods[-1]
+            print("LOTEEEEE:"+loteVazio+"...")
+            if loteVazio == '':
+                raise Exception
+
+        flagCorrompidoProd = False
     except Exception as e:
         # log error
         nextion.Enviar("tMsg", "Arquivos corrompidos!")
         nextion.Enviar("tMsg2", "Reformate utilizando o computador!")
 
+    try:
+        ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+        #ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
+        nextion.Enviar("tIP", ip)
+    except:
+        nextion.Enviar("tIP", "Conectando à Internet")
 
 while flagCheio:
     xmlStream = ET.parse(arq_parada)
     xmlstr = ET.tostring(xmlStream.getroot()).decode()
 
-    if len(xmlstr) > 57000:
+    if len(xmlstr) > 300000:
         nextion.Enviar("tMsg", "Arquivos lotados!")
         nextion.Enviar("tMsg2", "Limpe o armazenamento ou importe!")
 
     else:
         flagCheio = False
 
+    try:
+       print('esse')
+       ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+       #ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
+       nextion.Enviar("tIP", ip)
+    except:
+        nextion.Enviar("tIP", "Conectando à Internet")
 
+nextion.Enviar("tMsg", "Arquivo de Configuracao Importado!")
+nextion.Enviar("tMsg2", " ")
 
 rtc = Clock()
 DetectaAFK()
@@ -1401,6 +1433,3 @@ logicaPrincipal(T_INICIAL, True, False)
 while True:
     #sleep(0.000000010)
     pass
-                    
-            
-        
