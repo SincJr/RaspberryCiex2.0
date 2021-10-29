@@ -74,6 +74,7 @@ SIM = 69
 
 NAO_INFORMADO = "Nao informada"
 
+WIFI = True
 #
 #Declaração de portas
 #
@@ -174,8 +175,10 @@ class Server(Thread): #
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR, 1 )
                 try:
-                    HOST = netifaces.ifaddresses('eth0')[2][0]['addr']
-                    #HOST = netifaces.ifaddresses('wlan0')[2][0]['addr']
+                    if WIFI:
+                        HOST = netifaces.ifaddresses('wlan0')[2][0]['addr']
+                    else:
+                        HOST = netifaces.ifaddresses('eth0')[2][0]['addr']
                     sock.bind((HOST, PORT))
                     sock.listen()
                     print('ouve')
@@ -349,7 +352,10 @@ class Clock(Thread):
                 if self.telaAtual is T_INICIAL:
                     try:
                         print('esse')
-                        ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+                        if WIFI:
+                            ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
+                        else:
+                            ip = netifaces.ifaddresses('eth0')[2][0]['addr']
                         nextion.Enviar("tIP", ip)
                     except:
                         nextion.Enviar("tIP", "Conectando à Internet")
@@ -864,7 +870,10 @@ class Nextion(Thread): #
             nextion.Enviar('tOP', str(dictXmlProd['op']))
 
             try:
-                ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+                if WIFI:
+                    ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
+                else:
+                    ip = netifaces.ifaddresses('eth0')[2][0]['addr']
                 print('misterio1')
                 nextion.Enviar("tIP", ip)
             except:
@@ -1331,8 +1340,10 @@ while flagVazio:
 
         try:
             print('esse')
-            ip = netifaces.ifaddresses('eth0')[2][0]['addr']
-            #ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
+            if WIFI:
+                ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
+            else:
+                ip = netifaces.ifaddresses('eth0')[2][0]['addr']
             nextion.Enviar("tIP", ip)
         except:
             nextion.Enviar("tIP", "Conectando à Internet")
@@ -1392,8 +1403,10 @@ while flagCorrompidoParada or flagCorrompidoProd:
         nextion.Enviar("tMsg2", "Reformate utilizando o computador!")
 
     try:
-        ip = netifaces.ifaddresses('eth0')[2][0]['addr']
-        #ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
+        if WIFI:
+            ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
+        else:
+            ip = netifaces.ifaddresses('eth0')[2][0]['addr']
         nextion.Enviar("tIP", ip)
     except:
         nextion.Enviar("tIP", "Conectando à Internet")
@@ -1410,10 +1423,12 @@ while flagCheio:
         flagCheio = False
 
     try:
-       print('esse')
-       ip = netifaces.ifaddresses('eth0')[2][0]['addr']
-       #ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
-       nextion.Enviar("tIP", ip)
+        print('esse')
+        if WIFI:
+            ip = netifaces.ifaddresses('wlan0')[2][0]['addr']
+        else:
+            ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+        nextion.Enviar("tIP", ip)
     except:
         nextion.Enviar("tIP", "Conectando à Internet")
 
