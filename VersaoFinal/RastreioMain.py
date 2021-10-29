@@ -74,7 +74,7 @@ SIM = 69
 
 NAO_INFORMADO = "Nao informada"
 
-WIFI = True
+WIFI = False
 #
 #Declaração de portas
 #
@@ -677,18 +677,30 @@ class MexerXml():
             xmlParadas.write(arq_parada)
 
     def reformatar(self):
+        
         try:
-            tree = ET.parse(arq_parada)
-        except ET.ParseError:
+            xmlStream = ET.parse(arq_parada)
+            xmlraiz = xmlStream.getroot
+        except Exception:
             subprocess.Popen(['rm', 'RaspberryCiex2.0/VersaoFinal/data/paradas.xml'])
             subprocess.Popen(['cp', 'RaspberryCiex2.0/VersaoFinal/dataPadrao/paradas.xml', 'RaspberryCiex2.0/VersaoFinal/data/paradas.xml'])
-
-            pass
+            
 
         try:
-            tree = ET.parse(arq_prod)
-        except ET.ParseError:
+            xmlStream = ET.parse(arq_prod)
+            xmlraiz= xmlStream.getroot()
+            print('1XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+            prods = [prod for prod in xmlraiz.findall('./producoesM' + str(MAQUINA) + '/producao')]
+            #print(prods)
+            if  not prods == []:
+                loteVazio = prods[-1]
+                print("LOTEEEEE:"+loteVazio+"...")
+                if loteVazio == '':
+                    raise Exception
+            print('2XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+        except Exception:
             # log error
+            print('3XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
             subprocess.Popen(['rm', 'RaspberryCiex2.0/VersaoFinal/data/producao.xml'])
             subprocess.Popen(['cp', 'RaspberryCiex2.0/VersaoFinal/dataPadrao/producao.xml', 'RaspberryCiex2.0/VersaoFinal/data/producao.xml'])
 
@@ -899,7 +911,7 @@ class Nextion(Thread): #
 
     def Enviar(self, varNextion, msgEnviar, texto = True): #
 
-        print('para: ' + str(varNextion) + '  enviando: ' + str(msgEnviar))
+        #print('para: ' + str(varNextion) + '  enviando: ' + str(msgEnviar))
 
         varNextion = bytes(varNextion, encoding='iso-8859-1')
         ser.write(varNextion)
@@ -1381,7 +1393,7 @@ while flagCorrompidoParada or flagCorrompidoProd:
     except Exception as e:
         nextion.Enviar("tMsg", "Arquivos corrompidos!")
         nextion.Enviar("tMsg2", "Reformate utilizando o computador!")
-
+        pass
 
     try:
         flagCorrompidoProd = True
@@ -1389,7 +1401,7 @@ while flagCorrompidoParada or flagCorrompidoProd:
         xmlraiz= xmlStream.getroot()
 
         prods = [prod for prod in xmlraiz.findall('./producoesM' + str(MAQUINA) + '/producao')]
-        print(prods)
+        #print(prods)
         if  not prods == []:
             loteVazio = prods[-1]
             print("LOTEEEEE:"+loteVazio+"...")
@@ -1401,6 +1413,7 @@ while flagCorrompidoParada or flagCorrompidoProd:
         # log error
         nextion.Enviar("tMsg", "Arquivos corrompidos!")
         nextion.Enviar("tMsg2", "Reformate utilizando o computador!")
+        pass
 
     try:
         if WIFI:
