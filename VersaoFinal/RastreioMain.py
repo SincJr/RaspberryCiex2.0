@@ -693,10 +693,10 @@ class MexerXml():
             prods = [prod for prod in xmlraiz.findall('./producoesM' + str(MAQUINA) + '/producao')]
             #print(prods)
             if  not prods == []:
-                loteVazio = prods[-1]
-                print("LOTEEEEE:"+loteVazio+"...")
-                if loteVazio == '':
-                    raise Exception
+                for conteudo in prods[-1]:
+                    print(conteudo.text)
+                    if conteudo.text == None:
+                        raise Exception
             print('2XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
         except Exception:
             # log error
@@ -1021,7 +1021,7 @@ def logicaPrincipal(tela, entrando, mensagem):   #
         if entrando:
             nextion.Enviar('tMetSAd', '3500')
         else:
-            dictXmlProd['rolosad'] = mensagem
+            dictXmlProd['rolosad'] = int(mensagem)
 
     if tela is T_METcomAD:
         configurando = True
@@ -1388,7 +1388,8 @@ while flagCorrompidoParada or flagCorrompidoProd:
         flagCorrompidoParada = True
         xmlStream = ET.parse(arq_parada)
         xmlraiz = xmlStream.getroot
-
+        
+        print('abcParada')
         flagCorrompidoParada = False
     except Exception as e:
         nextion.Enviar("tMsg", "Arquivos corrompidos!")
@@ -1399,15 +1400,13 @@ while flagCorrompidoParada or flagCorrompidoProd:
         flagCorrompidoProd = True
         xmlStream = ET.parse(arq_prod)
         xmlraiz= xmlStream.getroot()
-
         prods = [prod for prod in xmlraiz.findall('./producoesM' + str(MAQUINA) + '/producao')]
-        #print(prods)
         if  not prods == []:
-            loteVazio = prods[-1]
-            print("LOTEEEEE:"+loteVazio+"...")
-            if loteVazio == '':
-                raise Exception
-
+            for conteudo in prods[-1]:
+                print(conteudo.text)
+                if conteudo.text == None:
+                    raise Exception
+        
         flagCorrompidoProd = False
     except Exception as e:
         # log error
